@@ -39,3 +39,7 @@ Branch `task-075/compiler-hygiene`; base075C3 handoff. Read generated route type
 ## 075D — Shared audited interface tokens
 
 Branch `task-075/shared-interface-tokens`; base075C4 handoff. Read audited Tailwind palette/type/geometry, base CSS and PostCSS resolution. Mechanically move CSS/tokens into packages/ui, export shared CSS, and wire customer/PostCSS/content paths. Five hand-edited source/config files; preserve canvas#F5F7FA ink#142237 brand#2456D8 and Inter/Georgia roles. Provider/schema/auth unchanged. Acceptance: frozen workspace install, strict typecheck, full build/unit tests; operations will consume this same package next.
+
+## 075E1 — Separate disabled operations shell
+
+Branch `task-075/operations-shell`; base075D handoff. Read ADR-0002 separate privileged surface boundary, source control matrix, current public operations placeholder, shared tokens and Framework setup. Five new source/config files (manifest, root route, route manifest, Router config, Vite config). This shell has no operator data, actions, metric fixtures, mock authorization or credential. Separate frontend URL is not a security boundary; actual records remain gated on server roles/ownership evidence. Typegen/build acceptance; dedicated strict TS config, root orchestration and browser check follow in075E2. No providers/schema mutations.

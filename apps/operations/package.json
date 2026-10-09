@@ -1,0 +1,24 @@
+{
+  "name": "@stayrelay/operations",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "react-router dev",
+    "build": "react-router build",
+    "typegen": "react-router typegen",
+    "preview": "vite preview --outDir build/client --host 0.0.0.0 --port 4174 --strictPort"
+  },
+  "dependencies": {
+    "@stayrelay/ui": "workspace:*",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-router": "8.4.0",
+    "@react-router/node": "8.4.0",
+    "isbot": "5.2.2"
+  },
+  "devDependencies": {
+    "@react-router/dev": "8.4.0",
+    "vite": "8.3.4"
+  }
+}
