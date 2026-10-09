@@ -6,6 +6,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { app } from '../../apps/api/src/app';
 import healthHandler from '../../api/health';
 import propertiesHandler from '../../api/properties';
+import notFoundHandler from '../../api/not-found';
 
 test('local API keeps inventory unavailable and refuses unsupported methods', async (context) => {
   const server = app.listen(0, '127.0.0.1');
@@ -63,4 +64,8 @@ test('Vercel function adapters expose the same disabled contract', () => {
     assert.equal(rejected.headers.get('cache-control'), 'no-store');
     assert.equal(rejected.body.error?.code, 'METHOD_NOT_ALLOWED');
   }
+  const missing = invoke(notFoundHandler, 'GET');
+  assert.equal(missing.status, 404);
+  assert.equal(missing.headers.get('cache-control'), 'no-store');
+  assert.equal(missing.body.error?.code, 'NOT_FOUND');
 });

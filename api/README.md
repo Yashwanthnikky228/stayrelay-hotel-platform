@@ -1,5 +1,10 @@
 # Vercel API adapters
 
-Vercel deploys each TypeScript module here as a Node.js function. The web app calls these same `/api/*` paths in local development through the Vite proxy to `apps/api`.
+`health.ts`, `properties.ts`, and `not-found.ts` use the same typed response contract as the local Express API in `apps/api/src/responses.ts`.
 
-`health.ts` is a runtime smoke check. `properties.ts` returns a typed `INVENTORY_NOT_CONFIGURED` response until a verified inventory provider and policy checks are connected. Neither endpoint presents local fixtures as real availability.
+- `GET`/`HEAD /api/health` reports API process readiness.
+- `GET`/`HEAD /api/properties` returns `503 INVENTORY_NOT_CONFIGURED` until verified reservation-specific inventory and policy controls exist.
+- Unsupported methods return `405 METHOD_NOT_ALLOWED` with `Allow: GET, HEAD`.
+- Responses carry `Cache-Control: no-store`.
+
+These functions contain no inventory fixtures, authentication, transaction commands, or payment credentials. Hosting path behavior and project ownership need a verified preview deployment before being treated as deployed evidence.
