@@ -46,6 +46,10 @@ Apply the newest explicitly audited or founder-approved source. For current plan
 - [Next-Gen UI/UX Architecture & Pixel-Perfect Audit — 2026-10-09](https://docs.google.com/document/d/12BblQyR3RLA5HXsic8e-lqRFfh-kjQgJzbqG3zaIGKw/edit) — current design audit; separates source-supported findings from recommendations and states that the prototype is not a production system.
 - [Interactive Design Prototype](https://drive.google.com/file/d/1xokKOUfv_L427o16DSPrDxzcAoPaq16O/view) — illustrative local interactions and fixtures only; never evidence of live inventory, backend state, or integrations.
 
+### Recorded repository decisions
+
+- [ADR-0001 — Pin the Vite 8.3 baseline](../adr/0001-vite-8-baseline.md) resolves TASK-003 to Vite `8.3.4`, locked and tested with Node `24.19.0`. It resolves only the Vite line; TASK-004 still owns verification of the broader framework/toolchain and provider assumptions.
+
 ### Audited domain volumes V01–V10
 
 These are the current audited domain documents. Re-read the volume owning the active roadmap task. Their current register status is IN_REVIEW; treat them as domain specifications, not as evidence that external assumptions are approved.

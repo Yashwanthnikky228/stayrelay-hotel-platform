@@ -1,20 +1,28 @@
 # StayRelay AI Handoff State
 
-**Active task:** TASK-002 — Canonical planning source map (documentation complete; PR open)  
-**Branch:** `task-002/canonical-source-map`  
-**Base commit:** `085f2944c5a0e519ee4b92b2be923d14eeb891c7` (`task-001/repository-baseline`)  
+**Active task:** TASK-003 — Resolve and test the Vite baseline (implementation and verification complete; PR open)  
+**Branch:** `task-003/vite-8-baseline`  
+**Base commit:** `4a48c75d91289010f7e8fe275577b2d9161c6fb5` (`task-002/canonical-source-map`)  
 **TASK-001 baseline:** [docs/ai/TASK-001-BASELINE.md](TASK-001-BASELINE.md)  
-**TASK-002 source map:** [docs/ai/SOURCE-OF-TRUTH.md](SOURCE-OF-TRUTH.md)  
-**TASK-002 source-map commit:** `2d752fae18800a733737104acceab36d9cef5ba7`  
-**TASK-002 review:** [PR #2](https://github.com/Yashwanthnikky228/stayrelay-hotel-platform/pull/2) (open; targets TASK-001 baseline branch).  
-**Migration head:** None found; no migration directory or database types are present.  
-**Feature flags/config versions:** No repository feature-flag registry or canonical config version found.  
-**Provider mode:** Not established by repository evidence.  
-**Reason-code version:** Not established as a versioned repository artifact.  
-**Pricing-rule version:** Not established as a versioned repository artifact.  
-**Files changed for TASK-002:** `docs/ai/SOURCE-OF-TRUTH.md`, `docs/ai/TASK-001-BASELINE.md`, `docs/ai/STATE.md`.  
-**Tests run:** None; documentation-only change. Read back Roadmap v3 metadata, TASK-001–TASK-009 dependency rows, Audit Completion Crosswalk, Project Index statuses, and linked canonical source documents.  
-**Provider changes:** None.  
-**Blockers:** TASK-003 requires a local/CI-capable repository environment to resolve and test the exact Vite/toolchain baseline and pin it; no lockfile is present. No functional product code should precede TASK-003/TASK-004/TASK-005 and the engineering foundation sequence. External legal, tax, provider, hotel/OTA, reserve, and pilot gates remain evidence-dependent.  
-**Next task:** TASK-003 — resolve and test the Vite/toolchain baseline per Roadmap v3.
+**Canonical source map:** [docs/ai/SOURCE-OF-TRUTH.md](SOURCE-OF-TRUTH.md)  
+**TASK-003 ADR:** [docs/adr/0001-vite-8-baseline.md](../adr/0001-vite-8-baseline.md)  
+**Resolved tool:** Vite `8.3.4`, exact-pinned in `package.json` and `package-lock.json`.  
+**TASK-003 evidence commit:** `4fbf7b9c3deac8bf7f6ac55cbb105f189c93c416` (lockfile added; the ADR records the full test result).  
+**TASK-003 review:** [PR #3](https://github.com/Yashwanthnikky228/stayrelay-hotel-platform/pull/3), open against the TASK-002 branch.  
+**Verified pre-handoff branch head:** `5ce5292bd51fe6cce139b20f4e22861c2de61474`.  
+**Runtime used:** Node.js `v24.19.0`; npm `11.9.0`.  
+**Migration/schema head:** None; no migration directory or database types exist.  
+**Feature flags/config versions:** None found in the repository.  
+**Provider mode/config:** Not established; no provider changes were made.  
+**Reason-code/pricing-rule versions:** Not established as versioned repository artifacts.  
+**Files changed:** `package.json`, `package-lock.json`, `docs/adr/0001-vite-8-baseline.md`, `docs/ai/SOURCE-OF-TRUTH.md`, `docs/ai/STATE.md`.  
+**Commands/results:**
+- `npm install --package-lock-only --ignore-scripts --no-audit --no-fund` — passed.
+- `npm ci --no-audit --no-fund` — passed; installed 301 packages.
+- `npm ls vite --depth=0` — passed; reports `vite@8.3.4`.
+- `npm run build` — passed; includes `npm run typecheck` and production Vite build.
+- npm emitted a non-blocking environment warning for unknown config `http-proxy`.
+**Provider changes:** None. No deployment was created.
+**Remaining blockers:** TASK-004 must recheck the broader runtime/framework/provider/security/accessibility assumptions and record evidence. The Vite pin/build does not validate React Router v8, Cloudflare Workers, Supabase, or production behavior.
+**Next task:** TASK-004 — recheck the roadmap-listed stack and platform assumptions.
 
