@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { UnitEconomicsPreview } from '@stayrelay/domain';
-import { calculatePreviewEconomics } from '../../src/components/marketplace/previewEconomics';
+import { calculatePreviewEconomics } from '../../apps/customer/src/components/marketplace/previewEconomics';
 
 const model: UnitEconomicsPreview = {
   sellerRequested: { amountMinor: 800_000, currency: 'INR' },

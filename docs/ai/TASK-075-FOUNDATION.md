@@ -13,3 +13,7 @@ Acceptance: `pnpm --config.store-dir=/tmp/stayrelay-pnpm-store import`, `pnpm in
 TASK-075 remains in progress until separate customer/operations apps and Router8 Framework Mode/TS6 have passed integrated validation. No provider, account, production or external-register mutation.
 
 075A results: frozen install passed after explicitly approving only the locked esbuild installation scripts (`allowBuilds.esbuild: true`); TLS/integrity/supply-chain checks retained. Typecheck/build and 5 unit tests passed. This sandbox requires `PNPM_CONFIG_STORE_DIR=/tmp/stayrelay-pnpm-store` on pnpm commands (including inherited subprocesses); npm_config_store_dir is not recognized by pnpm11. No machine-specific store path is committed.
+
+## 075B — Move the existing customer app
+
+Branch `task-075/customer-workspace`; base `310f68b`. Read existing frontend, Tailwind/PostCSS, Vite proxy, root compiler and unit-test import paths. Move existing src/index/Vite/Tailwind files unchanged into apps/customer; create its workspace manifest; update root orchestration/compiler/test paths. This preserves audited tokens and current service behavior without a second bootstrap. Four source/config files are hand-edited; moves are mechanical. API stays port3000; customer port5173 is explicit/strict. Acceptance: frozen pnpm lock/install, strict typecheck, customer build, finance tests. Hosting output remains a later slice; no deployment occurs. Rollback by reverting the move and reinstalling the previous lock.

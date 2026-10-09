@@ -27,11 +27,12 @@
     ]
   },
   "include": [
-    "src",
+    "apps/customer/src",
+    "apps/customer/vite.config.ts",
+    "apps/customer/tailwind.config.ts",
     "api",
     "apps/api/src",
     "packages/domain/src",
-    "vite.config.ts",
-    "tailwind.config.ts"
+    "tests"
   ]
 }

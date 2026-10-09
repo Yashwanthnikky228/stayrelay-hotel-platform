@@ -8,10 +8,10 @@
   },
   "scripts": {
     "dev": "concurrently -k -n web,api -c blue,green \"pnpm dev:web\" \"pnpm dev:api\"",
-    "dev:web": "vite --host 0.0.0.0",
+    "dev:web": "pnpm --filter @stayrelay/customer dev",
     "dev:api": "pnpm --filter @stayrelay/api dev",
-    "build": "pnpm typecheck && vite build",
-    "preview": "vite preview --host 0.0.0.0",
+    "build": "pnpm typecheck && pnpm --filter @stayrelay/customer build",
+    "preview": "pnpm --filter @stayrelay/customer preview",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
