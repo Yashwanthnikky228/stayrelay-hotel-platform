@@ -50,7 +50,7 @@ function isPropertyOffer(value: unknown): value is PropertyOffer {
   if (!value || typeof value !== 'object') return false;
   const offer = value as Record<string, unknown>;
   if (typeof offer.id !== 'string' || !Number.isInteger(offer.guestCapacity) || Number(offer.guestCapacity) < 1 || !isMoney(offer.buyerTotal)) return false;
-  if (typeof offer.isPreview !== 'boolean' || !offer.property || typeof offer.property !== 'object') return false;
+  if (offer.isPreview !== false || offer.unitEconomicsPreview !== undefined || !offer.property || typeof offer.property !== 'object') return false;
 
   const property = offer.property as Record<string, unknown>;
   if (
@@ -66,18 +66,7 @@ function isPropertyOffer(value: unknown): value is PropertyOffer {
     || !['under_review', 'eligible', 'ineligible', 'unknown'].includes(String(property.inventoryDecision))
   ) return false;
 
-  if (!offer.isPreview) {
-    // Internal seller fees, payment costs and reserve assumptions must never be sent to guest clients.
-    return offer.unitEconomicsPreview === undefined;
-  }
-  if (!offer.unitEconomicsPreview || typeof offer.unitEconomicsPreview !== 'object') return false;
-  const economics = offer.unitEconomicsPreview as Record<string, unknown>;
-  const amounts = ['sellerRequested', 'buyerMarketplaceFee', 'sellerMarketplaceFee', 'paymentProcessingEstimate', 'riskReserveAllocation']
-    .map((key) => economics[key]);
-  if (!amounts.every(isMoney)) return false;
-  const moneyAmounts = amounts as Array<{ amountMinor: number; currency: 'INR' | 'USD' }>;
-  return moneyAmounts.every((amount) => amount.currency === offer.buyerTotal.currency)
-    && offer.buyerTotal.amountMinor === (moneyAmounts[0].amountMinor + moneyAmounts[1].amountMinor);
+  return true;
 }
 
 export function isPropertySearchResponse(value: unknown): value is PropertySearchResponse {

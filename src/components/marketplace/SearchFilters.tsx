@@ -1,4 +1,4 @@
-import type { FormEvent, RefObject } from 'react';
+import { useEffect, useRef, type FormEvent, type RefObject } from 'react';
 
 export interface MarketplaceSearchValues {
   destination: string;
@@ -21,12 +21,18 @@ interface SearchFiltersProps {
 const controlClass = 'mt-1 min-h-12 w-full rounded-control border border-divider bg-surface px-3 text-ink-900 placeholder:text-ink-600 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-brand-600 focus-visible:ring-offset-2';
 
 export function SearchFilters({ value, formRef, isSearching, errorMessage, onChange, onSubmit, onReset }: SearchFiltersProps) {
+  const errorRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (errorMessage) errorRef.current?.focus();
+  }, [errorMessage]);
+
   function update<K extends keyof MarketplaceSearchValues>(key: K, next: MarketplaceSearchValues[K]) {
     onChange({ ...value, [key]: next });
   }
 
   return (
-    <form ref={formRef} className="rounded-card border border-divider bg-surface p-5 shadow-sm md:p-6" onSubmit={onSubmit}>
+    <form ref={formRef} aria-describedby={errorMessage ? 'marketplace-search-error' : undefined} className="rounded-card border border-divider bg-surface p-5 shadow-sm md:p-6" onSubmit={onSubmit}>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         <label className="field-label xl:col-span-2">
           Destination
@@ -51,7 +57,7 @@ export function SearchFilters({ value, formRef, isSearching, errorMessage, onCha
           <input className={controlClass} name="maxTotal" inputMode="decimal" placeholder="Any total" value={value.maxTotal} onChange={(event) => update('maxTotal', event.currentTarget.value)} />
         </label>
       </div>
-      {errorMessage && <p className="mt-4 rounded-control bg-error-50 px-3 py-2 text-sm text-error-700" role="alert">{errorMessage}</p>}
+      {errorMessage && <p ref={errorRef} id="marketplace-search-error" className="mt-4 rounded-control bg-error-50 px-3 py-2 text-sm text-error-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error-700" role="alert" tabIndex={-1}>{errorMessage}</p>}
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <button className="min-h-12 rounded-control bg-brand-600 px-5 font-semibold text-white transition-colors hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70" type="submit" disabled={isSearching}>
           {isSearching ? 'Searching…' : 'Search eligible stays'}

@@ -1,10 +1,10 @@
-import type { PropertyOffer } from '@stayrelay/domain';
+import type { MarketplaceOffer } from '@stayrelay/domain';
 import { formatMoney } from './formatMoney';
 
 interface PropertyCardProps {
-  offer: PropertyOffer;
+  offer: MarketplaceOffer;
   selected: boolean;
-  onSelect: (offer: PropertyOffer) => void;
+  onSelect: (offer: MarketplaceOffer) => void;
 }
 
 export function PropertyCard({ offer, selected, onSelect }: PropertyCardProps) {

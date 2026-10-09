@@ -1,8 +1,8 @@
-import type { PropertyOffer } from '@stayrelay/domain';
+import type { MarketplaceOffer } from '@stayrelay/domain';
 import { formatMoney } from './formatMoney';
 
 interface EconomicsBreakdownProps {
-  offer?: PropertyOffer;
+  offer?: MarketplaceOffer;
 }
 
 export function EconomicsBreakdown({ offer }: EconomicsBreakdownProps) {
@@ -15,7 +15,7 @@ export function EconomicsBreakdown({ offer }: EconomicsBreakdownProps) {
     );
   }
 
-  if (!offer.isPreview || !offer.unitEconomicsPreview) {
+  if (!offer.isPreview) {
     return (
       <aside aria-labelledby="economics-title" className="rounded-card border border-divider bg-surface p-5 md:p-6">
         <p className="text-sm font-medium text-success-700">Server-confirmed quote</p>

@@ -49,16 +49,25 @@ export interface UnitEconomicsPreview {
   riskReserveAllocation: Money;
 }
 
-export interface PropertyOffer {
+interface PropertyOfferBase {
   id: EntityId;
   property: Property;
   guestCapacity: number;
   buyerTotal: Money;
-  /** True only for UI/design fixtures. Preview offers must never be purchased. */
-  isPreview: boolean;
-  /** Internal model inputs are permitted only on labelled, non-bookable fixtures. */
-  unitEconomicsPreview?: UnitEconomicsPreview;
 }
+
+/** Server-returned offer. Contains buyer-facing quote data only. */
+export interface PropertyOffer extends PropertyOfferBase {
+  isPreview: false;
+}
+
+/** Design-only fixture. Never accepted from the API or offered for purchase. */
+export interface PreviewPropertyOffer extends PropertyOfferBase {
+  isPreview: true;
+  unitEconomicsPreview: UnitEconomicsPreview;
+}
+
+export type MarketplaceOffer = PropertyOffer | PreviewPropertyOffer;
 
 export interface PropertySearchFilters {
   destination: string;

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import type { PropertyOffer, PropertySearchFilters } from '@stayrelay/domain';
+import type { MarketplaceOffer, PropertyOffer, PropertySearchFilters } from '@stayrelay/domain';
 import { EconomicsBreakdown } from '../components/marketplace/EconomicsBreakdown';
 import { PropertyCard } from '../components/marketplace/PropertyCard';
 import { SearchFilters, type MarketplaceSearchValues } from '../components/marketplace/SearchFilters';
@@ -191,7 +191,7 @@ export function MarketplacePage() {
     setSelectedOfferId(previewOffers[0]?.id ?? '');
   }
 
-  function selectOffer(offer: PropertyOffer) {
+  function selectOffer(offer: MarketplaceOffer) {
     setSelectedOfferId(offer.id);
   }
 

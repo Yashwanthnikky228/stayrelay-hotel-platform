@@ -1,7 +1,7 @@
-import type { PropertyOffer } from '@stayrelay/domain';
+import type { PreviewPropertyOffer } from '@stayrelay/domain';
 
 /** Clearly labelled design fixtures; never eligible, live, or purchasable. */
-export const previewOffers: PropertyOffer[] = [
+export const previewOffers: PreviewPropertyOffer[] = [
   {
     id: 'preview-art-district',
     isPreview: true,
