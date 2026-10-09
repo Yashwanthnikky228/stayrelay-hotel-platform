@@ -20,7 +20,7 @@ npm install
 npm run dev
 ```
 
-The Vite server proxies `/api/*` to `http://localhost:3000`. Run the local API server when backend routes are added. Vercel deploys files in `api/` as Node.js functions.
+The web app and local Node API start together. Vite proxies `/api/*` to the API on port 3000. Vercel deploys files in `api/` as Node.js functions; the health function shares its response contract with the local API.
 
 ## Useful scripts
 
