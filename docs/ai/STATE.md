@@ -1,6 +1,6 @@
 # StayRelay AI Handoff State
 
-Updated: 2026-10-09. Active chunk: TASK-075B.
+Updated: 2026-10-09. Active chunk: TASK-075C1.
 Repository: `Yashwanthnikky228/stayrelay-hotel-platform`.
 Current content branch/commit are the last row; this handoff is committed separately to avoid a self-referential SHA.
 Default main observed: `d7991ea5add5c01c1cc681f59e2285ab6bfea3ee`; no merge or production action.
@@ -11,6 +11,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | --- | --- | --- | --- | --- |
 | TASK-075A | `task-075/pnpm-runtime-baseline` | `6abd44807afc3e55e3b1dc270e2229b41b693533` | pnpm lock/runtime workspace repair | frozen install, typecheck/build, 5 unit tests pass |
 | TASK-075B | `task-075/customer-workspace` | `224a273db903810f01a63b810b76067deb68d958` | existing customer app relocated without bootstrap | frozen install, strict typecheck/build, 5 tests pass |
+| TASK-075C1 | `task-075/framework-dependencies` | `b7feae55bb8c943c0901748b78bc6b3838cecfbf` | framework package preparation and TS6 adoption | frozen install, TS6 strict typecheck/build, 5 tests pass |
 
 ## Persistent controls and blockers
 
