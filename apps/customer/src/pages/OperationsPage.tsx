@@ -14,3 +14,5 @@ export function OperationsPage() {
     </section>
   );
 }
+
+export default OperationsPage;

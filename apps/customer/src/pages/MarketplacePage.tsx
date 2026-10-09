@@ -271,3 +271,5 @@ export function MarketplacePage() {
     </div>
   );
 }
+
+export default MarketplacePage;

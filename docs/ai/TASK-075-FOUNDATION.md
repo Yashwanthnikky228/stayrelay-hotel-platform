@@ -17,3 +17,7 @@ TASK-075 remains in progress until separate customer/operations apps and Router8
 ## 075B — Move the existing customer app
 
 Branch `task-075/customer-workspace`; base `310f68b`. Read existing frontend, Tailwind/PostCSS, Vite proxy, root compiler and unit-test import paths. Move existing src/index/Vite/Tailwind files unchanged into apps/customer; create its workspace manifest; update root orchestration/compiler/test paths. This preserves audited tokens and current service behavior without a second bootstrap. Four source/config files are hand-edited; moves are mechanical. API stays port3000; customer port5173 is explicit/strict. Acceptance: frozen pnpm lock/install, strict typecheck, customer build, finance tests. Hosting output remains a later slice; no deployment occurs. Rollback by reverting the move and reinstalling the previous lock.
+
+## 075C1 — Framework dependency preparation
+
+Branch `task-075/framework-dependencies`; base `468dfa7`. Read official tagged Router8.4 SPA/upgrade docs and package peers, existing pages and strict compiler. Expected source changes: root/customer manifests and three default page exports; generated lock plus record/handoff. Add exact Router/dev/node8.4 and TS6.0.3. Existing RouterDOM7 entry remains temporarily in use until the next bounded migration, so no mixed router contexts are introduced. Typecheck/build and five unit tests must pass; this preparation alone is not Framework Mode completion. No provider/migration/feature change.

@@ -15,3 +15,5 @@ export function PassportPage() {
     </section>
   );
 }
+
+export default PassportPage;
