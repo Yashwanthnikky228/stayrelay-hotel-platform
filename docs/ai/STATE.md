@@ -6,8 +6,9 @@
 **TASK-001 baseline:** [docs/ai/TASK-001-BASELINE.md](TASK-001-BASELINE.md)  
 **Canonical source map:** [docs/ai/SOURCE-OF-TRUTH.md](SOURCE-OF-TRUTH.md)  
 **TASK-003 ADR:** [ADR-0001 — Vite 8.3.4 baseline](../adr/0001-vite-8-baseline.md)  
-**TASK-004 evidence:** [Platform and standards recheck](TASK-004-PLATFORM-RECHECK.md), [PR #4](https://github.com/Yashwanthnikky228/stayrelay-hotel-platform/pull/4)  
-**TASK-005 decision register:** [ADR-0002](../adr/0002-architecture-decision-register.md)
+**TASK-004 evidence/review:** [Platform and standards recheck](TASK-004-PLATFORM-RECHECK.md), [PR #4](https://github.com/Yashwanthnikky228/stayrelay-hotel-platform/pull/4)  
+**TASK-005 decision register:** [ADR-0002](../adr/0002-architecture-decision-register.md)  
+**TASK-005 review:** [PR #5](https://github.com/Yashwanthnikky228/stayrelay-hotel-platform/pull/5) (open; targets TASK-004).
 
 **Verified toolchain:** Node.js `v24.19.0`, npm `11.9.0`, Vite `8.3.4`, React/React DOM `19.3.0`, React Router DOM `7.18.4`, TypeScript `5.9.3`. Vite build, install, and typecheck results are recorded in TASK-003/PR #3.  
 **TASK-005 outcome:** Recorded nine architecture decisions with accepted, conditional, and deferred statuses, rationale, consequences, revisit gates, and canonical source links. Provider/payment/pilot activation remains evidence-gated.  
