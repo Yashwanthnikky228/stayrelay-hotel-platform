@@ -1,5 +1,6 @@
 import type { MarketplaceOffer } from '@stayrelay/domain';
 import { formatMoney } from './formatMoney';
+import { calculatePreviewEconomics } from './previewEconomics';
 
 interface EconomicsBreakdownProps {
   offer?: MarketplaceOffer;
@@ -27,8 +28,7 @@ export function EconomicsBreakdown({ offer }: EconomicsBreakdownProps) {
   }
 
   const economics = offer.unitEconomicsPreview;
-  const platformGross = economics.buyerMarketplaceFee.amountMinor + economics.sellerMarketplaceFee.amountMinor;
-  const estimatedContribution = platformGross - economics.paymentProcessingEstimate.amountMinor - economics.riskReserveAllocation.amountMinor;
+  const totals = calculatePreviewEconomics(economics);
   const money = (amountMinor: number) => formatMoney({ amountMinor, currency: offer.buyerTotal.currency });
 
   return (
@@ -45,12 +45,12 @@ export function EconomicsBreakdown({ offer }: EconomicsBreakdownProps) {
         <div className="flex justify-between gap-4 py-3"><dt className="text-ink-600">Illustrative buyer marketplace fee</dt><dd className="font-medium tabular-nums">{formatMoney(economics.buyerMarketplaceFee)}</dd></div>
         <div className="flex justify-between gap-4 py-3 font-semibold"><dt>Example buyer total</dt><dd className="tabular-nums">{formatMoney(offer.buyerTotal)}</dd></div>
         <div className="flex justify-between gap-4 py-3"><dt className="text-ink-600">Illustrative seller marketplace fee</dt><dd className="font-medium tabular-nums">−{formatMoney(economics.sellerMarketplaceFee)}</dd></div>
-        <div className="flex justify-between gap-4 py-3 font-semibold"><dt>Example seller proceeds</dt><dd className="tabular-nums">{money(economics.sellerRequested.amountMinor - economics.sellerMarketplaceFee.amountMinor)}</dd></div>
+        <div className="flex justify-between gap-4 py-3 font-semibold"><dt>Example seller proceeds</dt><dd className="tabular-nums">{money(totals.sellerProceeds)}</dd></div>
         <div className="flex justify-between gap-4 py-3"><dt className="text-ink-600">Modelled payment processing</dt><dd className="font-medium tabular-nums">−{formatMoney(economics.paymentProcessingEstimate)}</dd></div>
-        <div className="flex justify-between gap-4 py-3"><dt className="text-ink-600">Illustrative risk reserve allocation</dt><dd className="font-medium tabular-nums">−{formatMoney(economics.riskReserveAllocation)}</dd></div>
-        <div className="flex justify-between gap-4 py-3 font-semibold"><dt>Example contribution before operating costs and claims</dt><dd className="tabular-nums">{money(estimatedContribution)}</dd></div>
+        <div className="flex justify-between gap-4 py-3 font-semibold"><dt>Example contribution before operating costs and claims</dt><dd className="tabular-nums">{money(totals.contributionBeforeOperatingCostsAndClaims)}</dd></div>
+        <div className="flex justify-between gap-4 py-3"><dt className="text-ink-600">Illustrative reserve cash earmark (not an expense)</dt><dd className="font-medium tabular-nums">{money(totals.reserveCashAllocation)}</dd></div>
       </dl>
-      <p className="mt-4 text-xs leading-5 text-ink-600">Every amount shown here is fictional design data. Actual fees, processing costs and reserve rules require approved business and payment-provider terms.</p>
+      <p className="mt-4 text-xs leading-5 text-ink-600">Every amount shown here is fictional design data. Reserve cash is capital set aside, separate from contribution and realized claim losses. Actual fees, processing costs and reserve rules require approved business and payment-provider terms.</p>
     </aside>
   );
 }
