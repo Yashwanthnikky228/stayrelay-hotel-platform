@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router';
 import { AppShell } from './layouts/AppShell';
 import { MarketplacePage } from './pages/MarketplacePage';
 import { OperationsPage } from './pages/OperationsPage';

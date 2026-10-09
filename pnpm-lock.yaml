@@ -87,9 +87,6 @@ importers:
       react-router:
         specifier: 8.4.0
         version: 8.4.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      react-router-dom:
-        specifier: 7.18.4
-        version: 7.18.4(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
     devDependencies:
       '@react-router/dev':
         specifier: 8.4.0

@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet } from 'react-router';
 
 const navigation = [
   { to: '/', label: 'Find a stay', end: true },

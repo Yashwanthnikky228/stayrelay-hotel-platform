@@ -21,3 +21,7 @@ Branch `task-075/customer-workspace`; base `310f68b`. Read existing frontend, Ta
 ## 075C1 — Framework dependency preparation
 
 Branch `task-075/framework-dependencies`; base `468dfa7`. Read official tagged Router8.4 SPA/upgrade docs and package peers, existing pages and strict compiler. Expected source changes: root/customer manifests and three default page exports; generated lock plus record/handoff. Add exact Router/dev/node8.4 and TS6.0.3. Existing RouterDOM7 entry remains temporarily in use until the next bounded migration, so no mixed router contexts are introduced. Typecheck/build and five unit tests must pass; this preparation alone is not Framework Mode completion. No provider/migration/feature change.
+
+## 075C2 — Consistent Router8 imports
+
+Branch `task-075/router-eight-imports`; base is the preceding075C1 handoff. Read all four RouterDOM imports and official v8 package exports. Switch all existing router/context imports together to react-router8; remove the customer's DOM7 dependency. The root still temporarily retains unused DOM7 until toolchain cleanup. Five source files changed, generated lock updated; no cross-version router context remains. Acceptance: strict TS6 typecheck, Vite build, finance tests. This is an intermediate Declarative Mode app; Framework conversion is next.
