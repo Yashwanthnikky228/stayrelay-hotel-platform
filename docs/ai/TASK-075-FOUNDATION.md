@@ -53,3 +53,7 @@ Branch `task-075/operations-tooling`; base075E1 handoff. Read new operations roo
 ## 075F1 — Disabled API contract parity
 
 Branch `task-075/api-hosting-adapter`; base075E2 handoff. Read Express app/router, Vercel functions, shared health/domain types and Vercel config. Five hand-edited source files: shared response function, Express app, two Vercel adapters, removal of redundant route. Exact path+method responses are shared: GET/HEAD health200, inventory503, unknown404, other methods405 with Allow; cache no-store. Express no longer parses request bodies because no write routes exist. This neither enables real inventory nor verifies Vercel deployment. Acceptance: strict TS6 typecheck/build, local API status/method contract tests; follow-up hosting rewrite slice.
+
+## 075F2 — API fail-closed contract checks
+
+Branch `task-075/api-contract-tests`; base075F1 handoff. Read shared API replies, Express and Vercel adapters. New focused test exercises real local HTTP: GET health200, inventory503, unknown404, disallowed methods405+Allow, no-store cache, HEAD with empty body. Direct function invocation checks equivalent disabled responses. Strict typecheck and `pnpm test:unit` passed: seven total tests, including two API behavior tests. Synthetic data only, no provider calls. This confirms local/adapter code parity; deployment routing remains unverified until hosting slice.
