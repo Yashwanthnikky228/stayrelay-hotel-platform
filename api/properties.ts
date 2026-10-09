@@ -1,10 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import type { ApiErrorResponse } from '@stayrelay/domain';
+import { getApiReply } from '../apps/api/src/responses.ts';
 
-export default function handler(_request: VercelRequest, response: VercelResponse) {
+export default function handler(request: VercelRequest, response: VercelResponse) {
+  const reply = getApiReply('/properties', request.method ?? 'GET');
   response.setHeader('Cache-Control', 'no-store');
-  const body: ApiErrorResponse = {
-    error: { code: 'INVENTORY_NOT_CONFIGURED', message: 'Live hotel inventory is not connected yet.' },
-  };
-  return response.status(503).json(body);
+  if (reply.allow) response.setHeader('Allow', reply.allow);
+  return response.status(reply.status).json(reply.body);
 }

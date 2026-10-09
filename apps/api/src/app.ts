@@ -1,20 +1,16 @@
 import express from 'express';
-import type { ApiErrorResponse } from '@stayrelay/domain';
-import { getHealthResponse } from './health';
-import { propertiesRouter } from './routes/properties';
+import { getApiReply } from './responses';
 
 export const app = express();
 app.disable('x-powered-by');
-app.use(express.json({ limit: '32kb' }));
-app.use('/api', propertiesRouter);
-
-app.get('/api/health', (_request, response) => {
+app.use('/api', (request, response) => {
+  const reply = getApiReply(request.path, request.method);
   response.setHeader('Cache-Control', 'no-store');
-  response.status(200).json(getHealthResponse());
+  if (reply.allow) response.setHeader('Allow', reply.allow);
+  response.status(reply.status).json(reply.body);
 });
 
 app.use((_request, response) => {
   response.setHeader('Cache-Control', 'no-store');
-  const body: ApiErrorResponse = { error: { code: 'NOT_FOUND', message: 'API route not found.' } };
-  response.status(404).json(body);
+  response.status(404).json(getApiReply('/missing', 'GET').body);
 });
