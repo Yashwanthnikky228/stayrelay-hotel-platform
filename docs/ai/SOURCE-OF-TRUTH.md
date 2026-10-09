@@ -69,6 +69,8 @@ These are the current audited domain documents. Re-read the volume owning the ac
 
 ## Historical and non-authoritative materials
 
+The earlier Next.js/microservices/AWS/Redis/Twilio architecture is classified as historical research in [TASK-007](TASK-007-SUPERSEDED-ARCHITECTURE.md). A new ADR is required to revive any of those implementation choices.
+
 - Original volumes in `StayRelay_Dossier_Library/03_ORIGINAL_SOURCE_VOLUMES` and the original Master Index are preserved as historical source copies. Use them only when an audited source points to specific retained material.
 - Raw research, duplicate pasted-research copies, and original control-source copies under `99_ARCHIVE/Historical/2026-10-09_Workspace_Cleanup` are not current architecture.
 - The prototype is not a backend contract or production implementation. Any synthetic fixtures must be clearly identified and non-bookable.
