@@ -66,6 +66,9 @@ importers:
       '@stayrelay/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@stayrelay/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       isbot:
         specifier: 5.2.2
         version: 5.2.2
@@ -87,6 +90,8 @@ importers:
         version: 8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@1.21.7)(tsx@4.23.15)
 
   packages/domain: {}
+
+  packages/ui: {}
 
 packages:
 

@@ -35,3 +35,7 @@ Branch `task-075/customer-framework`; base is075C2 handoff. Read the tagged SPA/
 ## 075C4 — Compiler and output hygiene
 
 Branch `task-075/compiler-hygiene`; base075C3 handoff. Read generated route types, scripts, compiler and ignored outputs. Five hand-edited config files: root/customer manifests, root/customer compilers, gitignore. Each app checks its generated route types using its own rootDirs; root checks API/domain/tests. Remove unused root RouterDOM7/React/plugin declarations; exact-pin generated isbot dependency. Add verified local unit/typegen scripts and recursive app build. Generated build and .react-router output are ignored. Frozen install, typegen/strict typecheck/fullbuild and five unit tests must pass; no provider/database transition.
+
+## 075D — Shared audited interface tokens
+
+Branch `task-075/shared-interface-tokens`; base075C4 handoff. Read audited Tailwind palette/type/geometry, base CSS and PostCSS resolution. Mechanically move CSS/tokens into packages/ui, export shared CSS, and wire customer/PostCSS/content paths. Five hand-edited source/config files; preserve canvas#F5F7FA ink#142237 brand#2456D8 and Inter/Georgia roles. Provider/schema/auth unchanged. Acceptance: frozen workspace install, strict typecheck, full build/unit tests; operations will consume this same package next.

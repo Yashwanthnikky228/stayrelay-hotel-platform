@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { isRouteErrorResponse, Links, Meta, Scripts, ScrollRestoration, useRouteError } from 'react-router';
 import { AppShell } from './layouts/AppShell';
-import './styles.css';
+import '@stayrelay/ui/styles.css';
 
 export function Layout({ children }: { children: ReactNode }) {
   return (
