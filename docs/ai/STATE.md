@@ -1,6 +1,6 @@
 # StayRelay AI Handoff State
 
-**Active task:** TASK-003 — Resolve and test the Vite baseline (implementation and verification complete; PR pending)  
+**Active task:** TASK-003 — Resolve and test the Vite baseline (implementation and verification complete; PR open)  
 **Branch:** `task-003/vite-8-baseline`  
 **Base commit:** `4a48c75d91289010f7e8fe275577b2d9161c6fb5` (`task-002/canonical-source-map`)  
 **TASK-001 baseline:** [docs/ai/TASK-001-BASELINE.md](TASK-001-BASELINE.md)  
@@ -8,6 +8,8 @@
 **TASK-003 ADR:** [docs/adr/0001-vite-8-baseline.md](../adr/0001-vite-8-baseline.md)  
 **Resolved tool:** Vite `8.3.4`, exact-pinned in `package.json` and `package-lock.json`.  
 **TASK-003 evidence commit:** `4fbf7b9c3deac8bf7f6ac55cbb105f189c93c416` (lockfile added; the ADR records the full test result).  
+**TASK-003 review:** [PR #3](https://github.com/Yashwanthnikky228/stayrelay-hotel-platform/pull/3), open against the TASK-002 branch.  
+**Verified pre-handoff branch head:** `5ce5292bd51fe6cce139b20f4e22861c2de61474`.  
 **Runtime used:** Node.js `v24.19.0`; npm `11.9.0`.  
 **Migration/schema head:** None; no migration directory or database types exist.  
 **Feature flags/config versions:** None found in the repository.  
