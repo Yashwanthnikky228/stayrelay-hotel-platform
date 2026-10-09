@@ -1,6 +1,6 @@
 # StayRelay AI Handoff State
 
-Updated: 2026-10-09. Active chunk: TASK-075E2.
+Updated: 2026-10-09. Active chunk: TASK-075F1.
 Repository: `Yashwanthnikky228/stayrelay-hotel-platform`.
 Current content branch/commit are the last row; this handoff is committed separately to avoid a self-referential SHA.
 Default main observed: `d7991ea5add5c01c1cc681f59e2285ab6bfea3ee`; no merge or production action.
@@ -18,6 +18,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | TASK-075D | `task-075/shared-interface-tokens` | `b5bc6b25c0b2395a6819d0dbfcfadfed6a064f8a` | audited UI tokens shared as workspace package | frozen install, strict typecheck/build, 5 tests pass |
 | TASK-075E1 | `task-075/operations-shell` | `8542031c34f1b157b2e16c10b7f123e59a1c609c` | separate operations shell with no privileged data | typegen/build pass; root typecheck customer pass |
 | TASK-075E2 | `task-075/operations-tooling` | `412521b34adac07b7ffc6df7ceb7232e06dc24d3` | operations strict compiler and three-service startup | frozen install, typecheck/build, browser hydration and local API statuses pass |
+| TASK-075F1 | `task-075/api-hosting-adapter` | `653c3b8441b1145fe0fc1581063f1ef7397987ad` | Express and serverless API response parity | typecheck/build pass; HTTP contract check follows |
 
 ## Persistent controls and blockers
 
