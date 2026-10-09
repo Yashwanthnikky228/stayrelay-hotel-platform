@@ -1,6 +1,6 @@
 # StayRelay AI Handoff State
 
-Updated: 2026-10-09. Active chunk: TASK-075F3.
+Updated: 2026-10-09. Active chunk: TASK-074C.
 Repository: `Yashwanthnikky228/stayrelay-hotel-platform`.
 Current content branch/commit are the last row; this handoff is committed separately to avoid a self-referential SHA.
 Default main observed: `d7991ea5add5c01c1cc681f59e2285ab6bfea3ee`; no merge or production action.
@@ -21,6 +21,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | TASK-075F1 | `task-075/api-hosting-adapter` | `653c3b8441b1145fe0fc1581063f1ef7397987ad` | Express and serverless API response parity | typecheck/build pass; HTTP contract check follows |
 | TASK-075F2 | `task-075/api-contract-tests` | `47c9f1ffc757ce136f8af50d148b0e657ffc77ef` | disabled API method and inventory contract | strict typecheck and 7 tests pass, including HTTP adapter cases |
 | TASK-075F3 | `task-075/hosting-boundaries` | `fb8396e83fcc45fd1057e46b0ce477819f7afe97` | customer/API path boundaries and operations project config | strict typecheck, both builds, 7 unit tests pass; Vercel preview unavailable |
+| TASK-074C | `task-074/search-state-repair` | `a2d63bd21d1b143c3a30a42898c189c80fae54a4` | search cancellation, stale URL, truthful empty state | strict typecheck/build, 9 unit tests, Chromium empty/invalid state pass |
 
 ## Persistent controls and blockers
 
