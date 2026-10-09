@@ -8,6 +8,8 @@
 **Audit mode:** Read-only GitHub/Vercel inspection before documentation-only change  
 **Scope:** Repository and deployment evidence only; no product behavior or external provider settings changed.
 
+**Canonical planning set:** See [docs/ai/SOURCE-OF-TRUTH.md](SOURCE-OF-TRUTH.md), added under TASK-002.
+
 ## Executive finding
 
 The connected GitHub repository is the StayRelay code repository. It contains an early Vite/React/TypeScript guest marketplace, an Express API scaffold, shared TypeScript domain contracts, and Vercel function adapters. A Vercel project is linked and reports a READY deployment for the observed `main` commit.
