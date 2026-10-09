@@ -7,7 +7,7 @@
     "dev": "tsx watch src/server.ts"
   },
   "dependencies": {
-    "@stayrelay/domain": "*",
+    "@stayrelay/domain": "workspace:*",
     "express": "^5.1.0"
   }
 }

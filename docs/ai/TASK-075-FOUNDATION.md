@@ -1,0 +1,15 @@
+# TASK-075 — Existing workspace repair
+
+Controlling sources: Roadmap v3 TASK-075, Technical Specification frozen toolchain/tree, audited V08, [ADR-0002](../adr/0002-architecture-decision-register.md), [TASK-074 audit](TASK-074-REPOSITORY-AUDIT.md). Provider mode unverified; migration/schema head and generated DB types absent; all transaction/privileged gates stay disabled.
+
+## 075A — pnpm and runtime
+
+Branch `task-075/pnpm-runtime-baseline`; base `5179f67`. Read root/workspace manifests, npm lock, installed runtime/package-manager metadata. Expected changes: root/API manifests, pnpm workspace YAML, runtime file, generated pnpm lock (replaces npm lock), this record and handoff.
+
+Pin tested Node24.19.0 and pnpm11.19.0 (Node>=22.13). Import the existing npm lock rather than re-resolving unrelated packages. Root scripts use pnpm and explicit workspace references. Do not call Node24.19 the newest patch. pnpm package-manager integrity is retained; no registry/TLS/signature bypass.
+
+Acceptance: `pnpm --config.store-dir=/tmp/stayrelay-pnpm-store import`, `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm build`, preview-economics unit tests; lockfile immutability and clean diff check. Rollback: revert this bounded migration and reinstall the previous npm lock.
+
+TASK-075 remains in progress until separate customer/operations apps and Router8 Framework Mode/TS6 have passed integrated validation. No provider, account, production or external-register mutation.
+
+075A results: frozen install passed after explicitly approving only the locked esbuild installation scripts (`allowBuilds.esbuild: true`); TLS/integrity/supply-chain checks retained. Typecheck/build and 5 unit tests passed. This sandbox requires `PNPM_CONFIG_STORE_DIR=/tmp/stayrelay-pnpm-store` on pnpm commands (including inherited subprocesses); npm_config_store_dir is not recognized by pnpm11. No machine-specific store path is committed.

@@ -4,18 +4,18 @@
   "version": "0.1.0",
   "type": "module",
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=24.19.0 <25"
   },
   "scripts": {
-    "dev": "concurrently -k -n web,api -c blue,green \"npm:dev:web\" \"npm:dev:api\"",
+    "dev": "concurrently -k -n web,api -c blue,green \"pnpm dev:web\" \"pnpm dev:api\"",
     "dev:web": "vite --host 0.0.0.0",
-    "dev:api": "npm run dev --workspace @stayrelay/api",
-    "build": "npm run typecheck && vite build",
+    "dev:api": "pnpm --filter @stayrelay/api dev",
+    "build": "pnpm typecheck && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@stayrelay/domain": "*",
+    "@stayrelay/domain": "workspace:*",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-router-dom": "^7.0.0"
@@ -35,8 +35,5 @@
     "typescript": "~5.9.0",
     "vite": "8.3.4"
   },
-  "workspaces": [
-    "packages/domain",
-    "apps/api"
-  ]
+  "packageManager": "pnpm@11.19.0"
 }
