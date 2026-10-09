@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getHealthResponse } from '../server/src/health';
+import { getHealthResponse } from '../server/src/health.ts';
 
 export default function handler(_request: VercelRequest, response: VercelResponse) {
   response.setHeader('Cache-Control', 'no-store');
