@@ -8,17 +8,17 @@
   },
   "scripts": {
     "dev": "concurrently -k -n web,api -c blue,green \"pnpm dev:web\" \"pnpm dev:api\"",
-    "dev:web": "pnpm --filter @stayrelay/customer dev",
+    "dev:web": "pnpm dev:customer",
     "dev:api": "pnpm --filter @stayrelay/api dev",
-    "build": "pnpm typecheck && pnpm --filter @stayrelay/customer build",
+    "build": "pnpm typecheck && pnpm -r --if-present build",
     "preview": "pnpm --filter @stayrelay/customer preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "pnpm typegen && tsc --noEmit && pnpm -r --if-present typecheck",
+    "dev:customer": "pnpm --filter @stayrelay/customer dev",
+    "typegen": "pnpm -r --if-present typegen",
+    "test:unit": "node --import tsx --test tests/unit/*.test.ts"
   },
   "dependencies": {
-    "@stayrelay/domain": "workspace:*",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
-    "react-router-dom": "^7.0.0"
+    "@stayrelay/domain": "workspace:*"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
@@ -26,7 +26,6 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vercel/node": "^5.0.0",
-    "@vitejs/plugin-react": "^6.0.0",
     "autoprefixer": "^10.4.20",
     "concurrently": "^9.0.0",
     "postcss": "^8.5.0",
