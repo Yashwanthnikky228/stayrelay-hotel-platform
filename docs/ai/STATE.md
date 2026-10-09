@@ -1,6 +1,6 @@
 # StayRelay AI Handoff State
 
-Updated: 2026-10-09. Active chunk: TASK-075C2.
+Updated: 2026-10-09. Active chunk: TASK-075C3.
 Repository: `Yashwanthnikky228/stayrelay-hotel-platform`.
 Current content branch/commit are the last row; this handoff is committed separately to avoid a self-referential SHA.
 Default main observed: `d7991ea5add5c01c1cc681f59e2285ab6bfea3ee`; no merge or production action.
@@ -13,6 +13,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | TASK-075B | `task-075/customer-workspace` | `224a273db903810f01a63b810b76067deb68d958` | existing customer app relocated without bootstrap | frozen install, strict typecheck/build, 5 tests pass |
 | TASK-075C1 | `task-075/framework-dependencies` | `b7feae55bb8c943c0901748b78bc6b3838cecfbf` | framework package preparation and TS6 adoption | frozen install, TS6 strict typecheck/build, 5 tests pass |
 | TASK-075C2 | `task-075/router-eight-imports` | `5eb8c0b638dbb80a16e020287713e7b5333ef68e` | Router8 imports migrated consistently | typecheck/build and 5 tests pass |
+| TASK-075C3 | `task-075/customer-framework` | `67a891f4ab19a78323b253a4f150ef1f5a9742aa` | customer Framework Mode with prerendered root | typegen/typecheck/build and Chromium hydration/navigation pass |
 
 ## Persistent controls and blockers
 
