@@ -30,6 +30,7 @@
     "api",
     "apps/api/src",
     "packages/domain/src",
-    "tests"
+    "tests",
+    "packages/ui/tailwind.config.ts"
   ]
 }

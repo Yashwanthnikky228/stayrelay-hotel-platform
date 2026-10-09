@@ -7,7 +7,7 @@
     "node": ">=24.19.0 <25"
   },
   "scripts": {
-    "dev": "concurrently -k -n web,api -c blue,green \"pnpm dev:web\" \"pnpm dev:api\"",
+    "dev": "concurrently -k -n customer,operations,api -c blue,magenta,green \"pnpm dev:customer\" \"pnpm dev:operations\" \"pnpm dev:api\"",
     "dev:web": "pnpm dev:customer",
     "dev:api": "pnpm --filter @stayrelay/api dev",
     "build": "pnpm typecheck && pnpm -r --if-present build",
@@ -15,7 +15,8 @@
     "typecheck": "pnpm typegen && tsc --noEmit && pnpm -r --if-present typecheck",
     "dev:customer": "pnpm --filter @stayrelay/customer dev",
     "typegen": "pnpm -r --if-present typegen",
-    "test:unit": "node --import tsx --test tests/unit/*.test.ts"
+    "test:unit": "node --import tsx --test tests/unit/*.test.ts",
+    "dev:operations": "pnpm --filter @stayrelay/operations dev"
   },
   "dependencies": {
     "@stayrelay/domain": "workspace:*"

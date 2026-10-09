@@ -43,3 +43,9 @@ Branch `task-075/shared-interface-tokens`; base075C4 handoff. Read audited Tailw
 ## 075E1 — Separate disabled operations shell
 
 Branch `task-075/operations-shell`; base075D handoff. Read ADR-0002 separate privileged surface boundary, source control matrix, current public operations placeholder, shared tokens and Framework setup. Five new source/config files (manifest, root route, route manifest, Router config, Vite config). This shell has no operator data, actions, metric fixtures, mock authorization or credential. Separate frontend URL is not a security boundary; actual records remain gated on server roles/ownership evidence. Typegen/build acceptance; dedicated strict TS config, root orchestration and browser check follow in075E2. No providers/schema mutations.
+
+## 075E2 — Operations compiler and three-service startup
+
+Branch `task-075/operations-tooling`; base075E1 handoff. Read new operations root/config/build output, root scripts/compiler and README. Five hand-edited source/config files: operations manifest/compiler, root manifest/compiler, README. Add strict generated-route typecheck for operations, include shared token config, start both apps with API in local development. Acceptance: frozen install, root typegen/strict typecheck/build, separate route+API local smoke, and focused browser hydration. No privileged action or verified provider config.
+
+075E2 results: frozen install, both app typegen/strict TS6 checks and both Framework builds pass. Local ports: customer5173, operations5174, API3000; root/passport/public ops HTML200, API health200 and inventory503. Chromium hydrated customer routes including404 and operations root, with no page exceptions; nav/back worked; both documents had no overflow at320px. Operations showed only the disabled access message. These are local checks, not hosting or WCAG conformance evidence.

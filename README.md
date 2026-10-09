@@ -1,46 +1,31 @@
 # StayRelay
 
-StayRelay hotel reservation platform starter: Vite + React + TypeScript guest marketplace, local Express API, and shared domain contracts.
+StayRelay is an evidence-backed hotel reservation transfer marketplace in development. Current marketplace cards are fictional, non-bookable design fixtures. No real reservation transfer, Passport credential, operations record, payment or seller payout is enabled.
 
-## Product guardrails
+## Workspace
 
-- Pilot inventory is reviewed and eligible before it can be shown as bookable.
-- `unknown` and unresolved inventory is never sellable.
-- Eligibility, risk capacity, payment, transfer, arrival, refund and payout are separate states.
-- The Reservation Passport is a projection of server truth; browser state cannot approve or complete a transaction.
-- Operations requires separate server-side authorization and an audit trail.
-- Do not invent inventory, partner logos, reviews, ratings, urgency or savings claims.
+- `apps/customer` — React Router 8 Framework Mode customer app (SPA output `build/client`), marketplace and Passport
+- `apps/operations` — separate Framework Mode operations app; access and data disabled pending server authorization
+- `apps/api` — local Express API; inventory returns `503 INVENTORY_NOT_CONFIGURED`
+- `api/` — Vercel API adapters, to be reviewed against final hosting mode
+- `packages/domain` — typed shared contracts
+- `packages/ui` — audited colors, typography, shape tokens and CSS
 
-## Run locally
+## Local development
 
-Requires Node.js 22.12+ and npm.
-
-```sh
-npm install
-npm run dev
-```
-
-The web app and Express API start together. Vite proxies `/api/*` to `apps/api` on port 3000. The API returns a typed not-configured response until a verified inventory source is connected. Vercel deploys files in `api/` as Node.js functions.
-
-## Useful scripts
+Node 24.19.0 and pnpm 11.19.0 are the tested versions (`.node-version`, root `packageManager`).
 
 ```sh
-npm run typecheck
-npm run build
-npm run preview
+pnpm install --frozen-lockfile
+pnpm dev
 ```
 
-## Workspace packages
+The customer app starts on port 5173, operations on 5174, and API on 3000. The customer Vite server proxies `/api` to the local API. `GET /api/health` returns 200; `GET /api/properties` returns 503 until verified inventory and backend gates exist.
 
-- `src/` — Vite guest-facing app
-- `apps/api/` — local Express API
-- `packages/domain/` — shared TypeScript domain contracts
-- `api/` — Vercel Node.js function adapters
+```sh
+pnpm typecheck
+pnpm build
+pnpm test:unit
+```
 
-## Initial routes
-
-- `/` — interactive exact-date search, sample cards and price breakdown preview
-- `/passport` — Reservation Passport empty state
-- `/operations` — privileged operations workspace placeholder
-
-The marketplace cards are fictional, clearly labelled design fixtures until verified inventory is connected. No booking, authentication, payment, QR credential or operator action is enabled yet.
+Build output is `apps/customer/build/client` and `apps/operations/build/client`. Neither output enables live transactions. Repository state, source precedence and current blockers are in [`docs/ai/STATE.md`](docs/ai/STATE.md) and [`docs/ai/SOURCE-OF-TRUTH.md`](docs/ai/SOURCE-OF-TRUTH.md).
