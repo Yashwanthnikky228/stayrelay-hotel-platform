@@ -115,11 +115,18 @@ export async function searchPropertyOffers(
   try {
     payload = await response.json();
   } catch {
+    if (signal?.aborted) {
+      throw new ApiError('The search was cancelled.', { code: 'ABORTED' });
+    }
     throw new ApiError('The StayRelay service returned an unreadable response.', {
       code: 'INVALID_RESPONSE',
       status: response.status,
       retryable: response.status >= 500,
     });
+  }
+
+  if (signal?.aborted) {
+    throw new ApiError('The search was cancelled.', { code: 'ABORTED' });
   }
 
   if (!response.ok) {

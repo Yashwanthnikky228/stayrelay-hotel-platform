@@ -84,6 +84,7 @@ export function MarketplacePage() {
 
     try {
       const offers = await searchPropertyOffers(searchFilters, controller.signal);
+      if (controller.signal.aborted || searchController.current !== controller) return;
       setServerOffers(offers);
       setSearchState('success');
       setSearchMessage(offers.length === 0
@@ -91,6 +92,7 @@ export function MarketplacePage() {
         : `${offers.length} eligible ${offers.length === 1 ? 'stay' : 'stays'} returned for your exact dates.`);
       setSelectedOfferId(offers[0]?.id ?? '');
     } catch (error) {
+      if (controller.signal.aborted || searchController.current !== controller) return;
       if (error instanceof ApiError && error.code === 'ABORTED') return;
       setSearchState('error');
       setServerOffers(null);
@@ -99,7 +101,9 @@ export function MarketplacePage() {
         ? 'Live inventory is not connected yet. The sample cards below are design examples only.'
         : 'We could not reach verified inventory. The sample cards below are design examples only. Please retry your search later.');
     } finally {
-      if (!controller.signal.aborted) setSearchState((state) => state === 'loading' ? 'idle' : state);
+      if (!controller.signal.aborted && searchController.current === controller) {
+        setSearchState((state) => state === 'loading' ? 'idle' : state);
+      }
     }
   }, []);
 
@@ -119,6 +123,9 @@ export function MarketplacePage() {
       void runSearch(parsed);
     } catch (error) {
       searchController.current?.abort();
+      setServerOffers(null);
+      setSearchMessage(undefined);
+      setSelectedOfferId(previewOffers[0]?.id ?? '');
       setFieldError(error instanceof Error ? error.message : 'Check your search details.');
       setSearchState('idle');
     }
@@ -239,7 +246,7 @@ export function MarketplacePage() {
         )}
 
         {serverOffers?.length === 0 && (
-          <p className="rounded-card border border-divider bg-surface p-5 text-sm leading-6 text-ink-600">No eligible stays are currently available for these search criteria. Sample cards below are unrelated design fixtures and are not date-matched.</p>
+          <p className="rounded-card border border-divider bg-surface p-5 text-sm leading-6 text-ink-600">No eligible stays were returned for these exact dates and filters. Try another search.</p>
         )}
 
         {visibleOffers.length > 0 ? (
@@ -251,7 +258,7 @@ export function MarketplacePage() {
               ))}
             </div>
           </>
-        ) : searchState !== 'loading' ? (
+        ) : showingPreview && searchState !== 'loading' ? (
           <p className="rounded-card border border-divider bg-surface p-5 text-sm text-ink-600" role="status">No sample cards match the destination, guest count and maximum total. Adjust the filters or reset the search.</p>
         ) : null}
       </section>
