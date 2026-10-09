@@ -37,6 +37,10 @@ npm run preview
 - `packages/domain/` — shared TypeScript domain contracts
 - `api/` — Vercel Node.js function adapters
 
+## Project handoff and canonical sources
+
+The active planning set and source precedence are maintained in [`docs/ai/SOURCES.md`](docs/ai/SOURCES.md). Read [`docs/ai/STATE.md`](docs/ai/STATE.md) for the current task, branch, verification evidence, migration status, and blockers. The dossier is referenced by source path and Drive link; it is not copied into this repository.
+
 ## Initial routes
 
 - `/` — interactive exact-date search, sample cards and price breakdown preview
