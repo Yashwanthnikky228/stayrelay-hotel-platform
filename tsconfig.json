@@ -13,6 +13,7 @@
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "esModuleInterop": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,
     "jsx": "react-jsx",
@@ -28,8 +29,9 @@
   "include": [
     "src",
     "api",
+    "apps/api/src",
+    "packages/domain/src",
     "vite.config.ts",
-    "tailwind.config.ts",
-    "server"
+    "tailwind.config.ts"
   ]
 }

@@ -1,6 +1,6 @@
 # StayRelay
 
-Starter for the StayRelay hotel reservation platform: a Vite + React + TypeScript guest experience with a Node.js API surface for Vercel.
+StayRelay hotel reservation platform starter: Vite + React + TypeScript guest marketplace, local Express API, and shared domain contracts.
 
 ## Product guardrails
 
@@ -20,7 +20,7 @@ npm install
 npm run dev
 ```
 
-The web app and local Node API start together. Vite proxies `/api/*` to the API on port 3000. Vercel deploys files in `api/` as Node.js functions; the health function shares its response contract with the local API.
+The web app and Express API start together. Vite proxies `/api/*` to `apps/api` on port 3000. The API returns a typed not-configured response until a verified inventory source is connected. Vercel deploys files in `api/` as Node.js functions.
 
 ## Useful scripts
 
@@ -30,10 +30,17 @@ npm run build
 npm run preview
 ```
 
+## Workspace packages
+
+- `src/` — Vite guest-facing app
+- `apps/api/` — local Express API
+- `packages/domain/` — shared TypeScript domain contracts
+- `api/` — Vercel Node.js function adapters
+
 ## Initial routes
 
-- `/` — guest marketplace and exact-date search shell
+- `/` — interactive exact-date search, sample cards and price breakdown preview
 - `/passport` — Reservation Passport empty state
 - `/operations` — privileged operations workspace placeholder
 
-These screens are scaffolding; no inventory, auth, payment, QR credential, booking, or operator actions are connected yet.
+The marketplace cards are fictional, clearly labelled design fixtures until verified inventory is connected. No booking, authentication, payment, QR credential or operator action is enabled yet.

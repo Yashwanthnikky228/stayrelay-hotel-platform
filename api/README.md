@@ -1,5 +1,5 @@
-# API
+# Vercel API adapters
 
-Add one Vercel Node.js function per route under this folder. Keep domain services, authorization, idempotency, validation and persistence on the server. Do not make the client the source of truth for booking, payment, eligibility, risk, transfer, arrival or payout states.
+Vercel deploys each TypeScript module here as a Node.js function. The web app calls these same `/api/*` paths in local development through the Vite proxy to `apps/api`.
 
-`health.ts` is a deployment smoke-check only; it does not indicate that marketplace services are operational.
+`health.ts` is a runtime smoke check. `properties.ts` returns a typed `INVENTORY_NOT_CONFIGURED` response until a verified inventory provider and policy checks are connected. Neither endpoint presents local fixtures as real availability.
