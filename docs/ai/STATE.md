@@ -54,7 +54,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | SR operations/publication | `task/sr-operations-publication-flow` | `83a930b` | generated seller fixture, operator-only review, separate eligibility/risk decisions, fail-closed demo publication and buyer visibility | typecheck, both builds, 15 unit/API tests; Chromium desktop seller/operations and 390px buyer journey pass |
 | SR checkout/passport | `task/sr-checkout-passport` | `622bcf5` | published synthetic offer checkout simulation and owner-scoped Reservation Passport with money disabled | typecheck, both builds, 16 unit/API tests; Chromium 390px checkout-to-Passport journey pass |
 | SR Passport transitions | `task/sr-passport-transitions` | `0df8af0` | append-only, optimistic-version synthetic payment/transfer/arrival lifecycle with operator controls | typecheck, both builds, 17 unit/API tests; Chromium operations and 390px checked-in Passport pass |
-| SR in-progress closure | `task/sr-in-progress-closure` | pending | resolved all 111 previously In-progress tracker rows using shared contracts, complete audit metadata, timeout/retry states and consolidated QA | typecheck, both builds, 18 unit/API tests; Chromium 320/768/1440 reflow, keyboard, reduced-motion and connected operations pass |
+| SR in-progress closure | `task/sr-in-progress-closure` | `6f7e370` | resolved all 111 previously In-progress tracker rows using shared contracts, complete audit metadata, timeout/retry states and consolidated QA | typecheck, both builds, 18 unit/API tests; Chromium 320/768/1440 reflow, keyboard, reduced-motion and connected operations pass |
 
 ## Persistent controls and blockers
 
