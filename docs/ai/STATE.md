@@ -1,6 +1,6 @@
 # StayRelay AI Handoff State
 
-Updated: 2026-10-09. Active chunk: TASK-007.
+Updated: 2026-10-10. Active chunk: TASK-075G.
 Repository: `Yashwanthnikky228/stayrelay-hotel-platform`.
 Current content branch/commit are the last row; this handoff is committed separately to avoid a self-referential SHA.
 Default main observed: `d7991ea5add5c01c1cc681f59e2285ab6bfea3ee`; no merge or production action.
@@ -21,15 +21,16 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | TASK-075F1 | `task-075/api-hosting-adapter` | `653c3b8441b1145fe0fc1581063f1ef7397987ad` | Express and serverless API response parity | typecheck/build pass; HTTP contract check follows |
 | TASK-075F2 | `task-075/api-contract-tests` | `47c9f1ffc757ce136f8af50d148b0e657ffc77ef` | disabled API method and inventory contract | strict typecheck and 7 tests pass, including HTTP adapter cases |
 | TASK-075F3 | `task-075/hosting-boundaries` | `fb8396e83fcc45fd1057e46b0ce477819f7afe97` | customer/API path boundaries and operations project config | strict typecheck, both builds, 7 unit tests pass; Vercel preview unavailable |
+| TASK-075G | `task-075/foundation-decision` | `16efdc3884f9a5bc7d10e8e936d3e138f118b104` | accepted development runtime and time-bounded hosting exception | documentation diff/link review; prior foundation checks retained |
 | TASK-074C | `task-074/search-state-repair` | `a2d63bd21d1b143c3a30a42898c189c80fae54a4` | search cancellation, stale URL, truthful empty state | strict typecheck/build, 9 unit tests, Chromium empty/invalid state pass |
 | TASK-007 | `task-007/superseded-research` | `2457e4254761a44947673638bdbffdc76ba4004b` | classify older architecture research without deleting provenance | source-path/link inspection and diff check pass |
 
 ## Persistent controls and blockers
 
 - Live TASK-002/003/004/005 already exist on the newer remote chain through `b99bc05`. Git PR refs1–5 verified; API open/closed/CI status unavailable (Forbidden). Avoid duplicate PRs. New branches are pushed for manual review; a push is not a PR.
-- Stash `c18fe8148e56a8ea161a2437c89c2e631260579d` and earlier branches are preserved. No whole-scaffold transplant.
+- Stashes `c18fe8148e56a8ea161a2437c89c2e631260579d` (prior scaffold) and `8f3c2130abc02b480d8a4df0d0181856c8e230f8` (five unexpected marketplace deletions observed after environment reconnect) are preserved. No whole-scaffold transplant.
 - Schema/migration head: none. Generated DB types: none. Provider identities/modes/deployment settings: unverified; no changes made.
 - TASK-006 blocked: no callable Drive/spreadsheet tools for canonical workbook; no parallel register created. TASK-012 accountable owners/signatures are not evidenced.
 - TASK-079/080 require TASK-026 ownership/legal evidence; database/auth/transactions/preview release tasks downstream remain blocked. Features fail closed; fixtures are non-bookable; no valid QR or privileged action exists.
 - Cloud setup instructions must match the final workspace and be saved in a draft; saving does not publish or prove a new environment works.
-- Next: finish dependency-ready TASK-075, then076/077/078, preserving bounded commits, local validation and exact external gates.
+- Next: review TASK-075G, then execute TASK-076/077/078 in bounded commits while preserving exact external gates.
