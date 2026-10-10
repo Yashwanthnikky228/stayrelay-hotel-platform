@@ -1,6 +1,6 @@
 # StayRelay AI Handoff State
 
-Updated: 2026-10-10. Active chunk: TASK-077.
+Updated: 2026-10-10. Active chunk: TASK-078.
 Repository: `Yashwanthnikky228/stayrelay-hotel-platform`.
 Current content branch/commit are the last row; this handoff is committed separately to avoid a self-referential SHA.
 Default main observed: `d7991ea5add5c01c1cc681f59e2285ab6bfea3ee`; no merge or production action.
@@ -24,6 +24,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | TASK-075G | `task-075/foundation-decision` | `ccdd8c8d82d924d6d2ce9030bece744d2d09175a` | accepted development runtime and time-bounded hosting exception | documentation diff/link review; prior foundation checks retained |
 | TASK-076 | `task-076/repository-instructions` | `7ffff5f640c49d4767a819cd71ff4b4c2f86b637` | repository execution, trust, provider, and definition-of-done instructions | manifest/ADR/diff/link review |
 | TASK-077 | `task-077/execution-plans` | `5a98e327e35eb817a96eae6c2946040fce3cb2f4` | living ExecPlan contract and bounded issue flow | instruction/manifest/ADR/diff review |
+| TASK-078 | `task-078/architecture-and-integrations` | `35f366843e6077fa74d1d6ebb89ed2ae16a3ccbc` | frozen ADR review and sanitized OpenAI/Supabase/HubSpot capability inventory | repository/tool capability/diff/link review; no provider calls available |
 | TASK-074C | `task-074/search-state-repair` | `a2d63bd21d1b143c3a30a42898c189c80fae54a4` | search cancellation, stale URL, truthful empty state | strict typecheck/build, 9 unit tests, Chromium empty/invalid state pass |
 | TASK-007 | `task-007/superseded-research` | `2457e4254761a44947673638bdbffdc76ba4004b` | classify older architecture research without deleting provenance | source-path/link inspection and diff check pass |
 
@@ -31,8 +32,8 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 
 - Live TASK-002/003/004/005 already exist on the newer remote chain through `b99bc05`. Git PR refs1–5 verified; API open/closed/CI status unavailable (Forbidden). Avoid duplicate PRs. New branches are pushed for manual review; a push is not a PR.
 - Stashes `c18fe8148e56a8ea161a2437c89c2e631260579d` (prior scaffold) and `8f3c2130abc02b480d8a4df0d0181856c8e230f8` (five unexpected marketplace deletions observed after environment reconnect) are preserved. No whole-scaffold transplant.
-- Schema/migration head: none. Generated DB types: none. Provider identities/modes/deployment settings: unverified; no changes made.
+- Schema/migration head: none. Generated DB types: none. Provider identities/modes/deployment settings: unverified; no changes made. The active session exposed no callable OpenAI Platform, Supabase, or HubSpot methods; see `PROVIDER-INTEGRATION-INVENTORY.md`.
 - TASK-006 blocked: no callable Drive/spreadsheet tools for canonical workbook; no parallel register created. TASK-012 accountable owners/signatures are not evidenced.
 - TASK-079/080 require TASK-026 ownership/legal evidence; database/auth/transactions/preview release tasks downstream remain blocked. Features fail closed; fixtures are non-bookable; no valid QR or privileged action exists.
 - Cloud setup instructions must match the final workspace and be saved in a draft; saving does not publish or prove a new environment works.
-- Next: review TASK-077, then execute TASK-078 without duplicating existing ADR decisions.
+- Next: review TASK-078. TASK-079/080 remain gated on TASK-026 ownership/legal evidence and verified provider targets; continue independent provider-neutral work only in roadmap order.
