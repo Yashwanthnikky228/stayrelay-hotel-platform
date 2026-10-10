@@ -53,6 +53,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | SR private evidence | `task/sr-private-synthetic-evidence` | `045ae47` | owner-only local synthetic evidence storage with watermark enforcement, quarantine and simulated scanning | typecheck, both builds, 14 unit/API tests including clean download, scanner failure and cross-account denial |
 | SR operations/publication | `task/sr-operations-publication-flow` | `83a930b` | generated seller fixture, operator-only review, separate eligibility/risk decisions, fail-closed demo publication and buyer visibility | typecheck, both builds, 15 unit/API tests; Chromium desktop seller/operations and 390px buyer journey pass |
 | SR checkout/passport | `task/sr-checkout-passport` | `622bcf5` | published synthetic offer checkout simulation and owner-scoped Reservation Passport with money disabled | typecheck, both builds, 16 unit/API tests; Chromium 390px checkout-to-Passport journey pass |
+| SR Passport transitions | `task/sr-passport-transitions` | pending | append-only, optimistic-version synthetic payment/transfer/arrival lifecycle with operator controls | typecheck, both builds, 17 unit/API tests; Chromium operations and 390px checked-in Passport pass |
 
 ## Persistent controls and blockers
 
@@ -87,5 +88,6 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 - Local Chromium evidence: `/workspace/stayrelay-seller-evidence.png`, `/workspace/stayrelay-operations-review.png`, and `/workspace/stayrelay-buyer-visible-mobile.png`. Hosted identity, database, private storage and operations remain explicitly disabled because SQLite and local files are not durable Vercel services.
 - Deployment blocker rechecked once after the 2026-10-11 environment restart: all four Vercel bindings are present, while `api.vercel.com` still fails DNS with `EAI_AGAIN` both normally and outside the sandbox. Native Git remains available; do not retry the same Vercel API request without a network-policy/environment change.
 - A published synthetic offer can now create one buyer-owned local order and Reservation Passport. Self-purchase, duplicates, unknown offers, anonymous access and cross-account Passport reads fail closed. Status remains payment-confirmation-pending; money movement, payout and arrival credentials remain disabled.
-- Next synthetic milestone: simulated payment-provider confirmation and transfer/arrival state transitions with version checks, then claims/recovery and support tooling.
+- The Passport lifecycle now uses append-only state events and expected-version commands. The ordered synthetic path reaches checked-in while stale versions and invalid jumps fail closed; buyer and operations projections agree. No real provider, transfer, hotel action or QR exists.
+- Next synthetic milestone: transfer failure, claims/recovery and support escalation states, followed by cancellation/refund simulation.
 - Next canonical task is TASK-0051, but it depends on blocked TASK-0050. TASK-0076 shares that dependency. Continue only with an independently dependency-ready row or after the named external gates are evidenced.

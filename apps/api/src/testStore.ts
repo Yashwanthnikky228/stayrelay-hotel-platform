@@ -45,6 +45,7 @@ export class TestStore {
       CREATE TABLE IF NOT EXISTS demo_listings (draft_id TEXT PRIMARY KEY REFERENCES seller_drafts(id), published_at TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS synthetic_orders (id TEXT PRIMARY KEY, buyer_id TEXT NOT NULL REFERENCES accounts(id), draft_id TEXT NOT NULL REFERENCES seller_drafts(id), status TEXT NOT NULL CHECK(status = 'confirmation_pending'), created_at TEXT NOT NULL, UNIQUE(buyer_id, draft_id));
       CREATE TABLE IF NOT EXISTS reservation_passports (id TEXT PRIMARY KEY, order_id TEXT NOT NULL UNIQUE REFERENCES synthetic_orders(id), owner_id TEXT NOT NULL REFERENCES accounts(id), status TEXT NOT NULL CHECK(status = 'payment_confirmation_pending'), version INTEGER NOT NULL, status_updated_at TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS passport_state_events (id TEXT PRIMARY KEY, passport_id TEXT NOT NULL REFERENCES reservation_passports(id), status TEXT NOT NULL, version INTEGER NOT NULL, actor_id TEXT NOT NULL REFERENCES accounts(id), occurred_at TEXT NOT NULL, UNIQUE(passport_id, version));
     `);
   }
 
@@ -184,6 +185,7 @@ export class TestStore {
     try {
       this.database.prepare('INSERT INTO synthetic_orders (id, buyer_id, draft_id, status, created_at) VALUES (?, ?, ?, ?, ?)').run(order.id, buyerId, draftId, order.status, createdAt);
       this.database.prepare('INSERT INTO reservation_passports (id, order_id, owner_id, status, version, status_updated_at) VALUES (?, ?, ?, ?, ?, ?)').run(passport.id, order.id, buyerId, passport.status, passport.version, createdAt);
+      this.database.prepare('INSERT INTO passport_state_events (id, passport_id, status, version, actor_id, occurred_at) VALUES (?, ?, ?, ?, ?, ?)').run(randomUUID(), passport.id, passport.status, passport.version, buyerId, createdAt);
       this.audit(buyerId, 'checkout_simulation.created', 'synthetic_order', order.id); this.audit(buyerId, 'reservation_passport.created', 'reservation_passport', passport.id);
       this.database.exec('COMMIT');
     } catch (error) { this.database.exec('ROLLBACK'); throw error; }
@@ -191,8 +193,38 @@ export class TestStore {
   }
 
   listPassports(ownerId: string): ReservationPassport[] {
-    const rows = this.database.prepare('SELECT id, order_id, owner_id, status, version, status_updated_at FROM reservation_passports WHERE owner_id = ? ORDER BY status_updated_at DESC').all(ownerId) as unknown as { id: string; order_id: string; owner_id: string; status: ReservationPassport['status']; version: number; status_updated_at: string }[];
-    return rows.map((row) => ({ id: row.id, bookingId: row.order_id, ownerId: row.owner_id, status: row.status, version: row.version, statusUpdatedAt: row.status_updated_at, nextAction: { label: 'Wait for simulated payment confirmation', owner: 'payment_provider' }, arrivalGuideAvailable: false }));
+    const rows = this.database.prepare(`SELECT p.id, p.order_id, p.owner_id, e.status, e.version, e.occurred_at AS status_updated_at FROM reservation_passports p JOIN passport_state_events e ON e.passport_id = p.id AND e.version = (SELECT MAX(version) FROM passport_state_events WHERE passport_id = p.id) WHERE p.owner_id = ? ORDER BY e.occurred_at DESC`).all(ownerId) as unknown as { id: string; order_id: string; owner_id: string; status: ReservationPassport['status']; version: number; status_updated_at: string }[];
+    return rows.map((row) => ({ id: row.id, bookingId: row.order_id, ownerId: row.owner_id, status: row.status, version: row.version, statusUpdatedAt: row.status_updated_at, nextAction: row.status === 'checked_in' ? undefined : { label: row.status === 'payment_confirmation_pending' ? 'Wait for simulated payment confirmation' : 'Continue the synthetic operations simulation', owner: row.status === 'payment_confirmation_pending' ? 'payment_provider' : 'stayrelay_operations' }, arrivalGuideAvailable: row.status === 'ready_for_arrival' || row.status === 'checked_in' }));
+  }
+
+  listAllPassports(): ReservationPassport[] {
+    const owners = this.database.prepare('SELECT DISTINCT owner_id FROM reservation_passports').all() as unknown as { owner_id: string }[];
+    return owners.flatMap((row) => this.listPassports(row.owner_id));
+  }
+
+  transitionPassport(operatorId: string, passportId: string, action: string, expectedVersion: number): ReservationPassport | 'not_found' | 'version_conflict' | 'invalid_transition' {
+    const current = this.listAllPassports().find((passport) => passport.id === passportId);
+    if (!current) return 'not_found';
+    if (current.version !== expectedVersion) return 'version_conflict';
+    const transitions: Record<string, Partial<Record<string, ReservationPassport['status']>>> = {
+      payment_confirmation_pending: { confirm_payment: 'under_review' },
+      under_review: { approve_transfer: 'eligible_for_transfer' },
+      eligible_for_transfer: { start_transfer: 'transfer_in_progress' },
+      transfer_in_progress: { confirm_transfer: 'transfer_confirmed' },
+      transfer_confirmed: { ready_for_arrival: 'ready_for_arrival' },
+      ready_for_arrival: { confirm_check_in: 'checked_in' },
+    };
+    const nextStatus = transitions[current.status]?.[action];
+    if (!nextStatus) return 'invalid_transition';
+    const version = current.version + 1; const occurredAt = now();
+    try {
+      this.database.prepare('INSERT INTO passport_state_events (id, passport_id, status, version, actor_id, occurred_at) VALUES (?, ?, ?, ?, ?, ?)').run(randomUUID(), passportId, nextStatus, version, operatorId, occurredAt);
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('UNIQUE')) return 'version_conflict';
+      throw error;
+    }
+    this.audit(operatorId, `passport.${action}`, 'reservation_passport', passportId);
+    return { ...current, status: nextStatus, version, statusUpdatedAt: occurredAt, nextAction: nextStatus === 'checked_in' ? undefined : { label: 'Continue the synthetic operations simulation', owner: 'stayrelay_operations' }, arrivalGuideAvailable: nextStatus === 'ready_for_arrival' || nextStatus === 'checked_in' };
   }
 
   private audit(actorId: string | null, action: string, targetType: string, targetId: string) {

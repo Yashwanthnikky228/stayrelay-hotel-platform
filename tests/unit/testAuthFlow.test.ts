@@ -113,3 +113,18 @@ test('checkout simulation creates an owner-scoped Reservation Passport without m
   assert.equal(((await json('/passports', { headers: { cookie: sellerCookie } })).body?.passports as unknown[]).length, 0);
   assert.equal((await json('/checkout-simulations', { method: 'POST', headers: { cookie: sellerCookie }, body: JSON.stringify({ offerId: `demo-offer-${draftId}` }) })).response.status, 409);
 });
+
+test('operator advances Passport through version-checked synthetic transfer and arrival states', async () => {
+  const operator = await json('/test-auth/operator-session', { method: 'POST', body: JSON.stringify({ email: 'operator@stayrelay.test' }) }); const operatorCookie = operator.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(operatorCookie);
+  const listed = await json('/operations/passports', { headers: { cookie: operatorCookie } }); let passport = (listed.body?.passports as { id: string; version: number; status: string }[])[0]; assert.ok(passport);
+  const actions = [['confirm_payment','under_review'],['approve_transfer','eligible_for_transfer'],['start_transfer','transfer_in_progress'],['confirm_transfer','transfer_confirmed'],['ready_for_arrival','ready_for_arrival'],['confirm_check_in','checked_in']] as const;
+  for (const [action, status] of actions) {
+    const result = await json(`/operations/passports/${passport.id}/transition`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ action, expectedVersion: passport.version }) });
+    assert.equal(result.response.status, 200); passport = result.body?.passport as typeof passport; assert.equal(passport.status, status);
+  }
+  assert.equal(passport.version, 7);
+  assert.equal((await json(`/operations/passports/${passport.id}/transition`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ action: 'confirm_payment', expectedVersion: 1 }) })).response.status, 409);
+  assert.equal((await json(`/operations/passports/${passport.id}/transition`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ action: 'confirm_payment', expectedVersion: 7 }) })).response.status, 409);
+  const buyer = await json('/test-auth/session', { method: 'POST', body: JSON.stringify({ email: 'buyer-one@example.test' }) }); const buyerCookie = buyer.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(buyerCookie);
+  const buyerPassport = ((await json('/passports', { headers: { cookie: buyerCookie } })).body?.passports as { status: string; version: number }[])[0]; assert.equal(buyerPassport.status, 'checked_in'); assert.equal(buyerPassport.version, 7);
+});

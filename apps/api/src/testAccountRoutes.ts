@@ -59,6 +59,17 @@ export function handleTestAccountRoute(request: Request, response: Response, sto
   if (request.path.startsWith('/operations/')) {
     if (!store.isOperator(account.id)) { error(response, 403, 'OPERATOR_REQUIRED', 'Operator permission is required.'); return true; }
     if (request.path === '/operations/reviews' && request.method === 'GET') { response.json({ reviews: store.listReviewQueue() }); return true; }
+    if (request.path === '/operations/passports' && request.method === 'GET') { response.json({ passports: store.listAllPassports() }); return true; }
+    const passportTransition = request.path.match(/^\/operations\/passports\/([^/]+)\/transition$/);
+    if (passportTransition && request.method === 'POST') {
+      const input = body(request); const expectedVersion = Number(input.expectedVersion); const action = String(input.action ?? '');
+      if (!Number.isInteger(expectedVersion) || expectedVersion < 1) { error(response, 400, 'INVALID_VERSION', 'Expected version must be a positive integer.'); return true; }
+      const result = store.transitionPassport(account.id, passportTransition[1], action, expectedVersion);
+      if (result === 'not_found') { error(response, 404, 'PASSPORT_NOT_FOUND', 'Reservation Passport not found.'); return true; }
+      if (result === 'version_conflict') { error(response, 409, 'VERSION_CONFLICT', 'Passport changed; reload before retrying.'); return true; }
+      if (result === 'invalid_transition') { error(response, 409, 'INVALID_TRANSITION', 'That transition is not allowed from the current status.'); return true; }
+      response.json({ passport: result }); return true;
+    }
     const decisionMatch = request.path.match(/^\/operations\/reviews\/([^/]+)\/(eligibility|risk)$/);
     if (decisionMatch && request.method === 'POST') {
       const decision = String(body(request).decision) as DemoReviewDecision;
