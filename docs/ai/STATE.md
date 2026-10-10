@@ -30,10 +30,10 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 
 ## Persistent controls and blockers
 
-- Live TASK-002/003/004/005 already exist on the newer remote chain through `b99bc05`. Git PR refs1–5 verified; API open/closed/CI status unavailable (Forbidden). Avoid duplicate PRs. New branches are pushed for manual review; a push is not a PR.
+- Live TASK-002/003/004/005 already exist on the newer remote chain through `b99bc05`. Git PR refs1–5 were previously verified; GitHub GraphQL remained `Forbidden` after environment reconnection, so current PR/CI discovery and PR creation are unavailable. Avoid duplicate PRs. New branches are pushed for manual review; a push is not a PR.
 - Stashes `c18fe8148e56a8ea161a2437c89c2e631260579d` (prior scaffold) and `8f3c2130abc02b480d8a4df0d0181856c8e230f8` (five unexpected marketplace deletions observed after environment reconnect) are preserved. No whole-scaffold transplant.
 - Schema/migration head: none. Generated DB types: none. Provider identities/modes/deployment settings: unverified; no changes made. The active session exposed no callable OpenAI Platform, Supabase, or HubSpot methods; see `PROVIDER-INTEGRATION-INVENTORY.md`.
 - TASK-006 blocked: no callable Drive/spreadsheet tools for canonical workbook; no parallel register created. TASK-012 accountable owners/signatures are not evidenced.
 - TASK-079/080 require TASK-026 ownership/legal evidence; database/auth/transactions/preview release tasks downstream remain blocked. Features fail closed; fixtures are non-bookable; no valid QR or privileged action exists.
-- Cloud setup instructions must match the final workspace and be saved in a draft; saving does not publish or prove a new environment works.
+- The active cloud configuration contains the tested install/start instructions and currently has no pending draft. This reconnected instance passed frozen pnpm install, strict typecheck, both framework builds, and all 9 unit tests; local customer `/`, customer `/passport`, operations `/`, and API health returned `200`, while inventory correctly returned `503 INVENTORY_NOT_CONFIGURED`. The saved checkout ref remains `main`; pushed feature branches still require review and merge before a fresh main checkout includes them.
 - Next: review TASK-078. TASK-079/080 remain gated on TASK-026 ownership/legal evidence and verified provider targets; continue independent provider-neutral work only in roadmap order.
