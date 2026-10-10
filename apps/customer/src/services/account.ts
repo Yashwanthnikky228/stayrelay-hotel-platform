@@ -5,7 +5,8 @@ export class AccountApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`/api${path}`, { ...init, headers: { 'content-type': 'application/json', ...init?.headers } });
+  const timeout = AbortSignal.timeout(10_000);
+  const response = await fetch(`/api${path}`, { ...init, signal: init?.signal ? AbortSignal.any([init.signal, timeout]) : timeout, headers: { 'content-type': 'application/json', ...init?.headers } });
   if (response.status === 204) return undefined as T;
   const payload = await response.json() as T & { error?: { code?: string; message?: string } };
   if (!response.ok) throw new AccountApiError(payload.error?.message ?? 'Account request failed.', response.status, payload.error?.code);

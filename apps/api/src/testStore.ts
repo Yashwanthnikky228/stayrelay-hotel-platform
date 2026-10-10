@@ -38,7 +38,7 @@ export class TestStore {
       CREATE TABLE IF NOT EXISTS accounts (id TEXT PRIMARY KEY, email TEXT NOT NULL UNIQUE, display_name TEXT NOT NULL, created_at TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS sessions (token_digest TEXT PRIMARY KEY, account_id TEXT NOT NULL REFERENCES accounts(id), expires_at TEXT NOT NULL, revoked_at TEXT);
       CREATE TABLE IF NOT EXISTS seller_drafts (id TEXT PRIMARY KEY, owner_id TEXT NOT NULL REFERENCES accounts(id), hotel_name TEXT NOT NULL, city TEXT NOT NULL, check_in TEXT NOT NULL, check_out TEXT NOT NULL, guest_count INTEGER NOT NULL, status TEXT NOT NULL CHECK(status = 'draft'), created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
-      CREATE TABLE IF NOT EXISTS audit_events (id TEXT PRIMARY KEY, actor_id TEXT, action TEXT NOT NULL, target_type TEXT NOT NULL, target_id TEXT NOT NULL, occurred_at TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS audit_events (id TEXT PRIMARY KEY, actor_id TEXT, action TEXT NOT NULL, reason_code TEXT NOT NULL, correlation_id TEXT NOT NULL, target_type TEXT NOT NULL, target_id TEXT NOT NULL, occurred_at TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS synthetic_evidence (id TEXT PRIMARY KEY, draft_id TEXT NOT NULL REFERENCES seller_drafts(id), owner_id TEXT NOT NULL REFERENCES accounts(id), original_filename TEXT NOT NULL, content_type TEXT NOT NULL, byte_size INTEGER NOT NULL, sha256 TEXT NOT NULL, state TEXT NOT NULL CHECK(state IN ('quarantined','simulated_clean')), scan_mode TEXT NOT NULL, storage_key TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS operator_accounts (account_id TEXT PRIMARY KEY REFERENCES accounts(id));
       CREATE TABLE IF NOT EXISTS demo_reviews (draft_id TEXT PRIMARY KEY REFERENCES seller_drafts(id), eligibility_decision TEXT NOT NULL DEFAULT 'pending', risk_decision TEXT NOT NULL DEFAULT 'pending', eligibility_reviewer_id TEXT, risk_reviewer_id TEXT, updated_at TEXT NOT NULL);
@@ -47,6 +47,9 @@ export class TestStore {
       CREATE TABLE IF NOT EXISTS reservation_passports (id TEXT PRIMARY KEY, order_id TEXT NOT NULL UNIQUE REFERENCES synthetic_orders(id), owner_id TEXT NOT NULL REFERENCES accounts(id), status TEXT NOT NULL CHECK(status = 'payment_confirmation_pending'), version INTEGER NOT NULL, status_updated_at TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS passport_state_events (id TEXT PRIMARY KEY, passport_id TEXT NOT NULL REFERENCES reservation_passports(id), status TEXT NOT NULL, version INTEGER NOT NULL, actor_id TEXT NOT NULL REFERENCES accounts(id), occurred_at TEXT NOT NULL, UNIQUE(passport_id, version));
     `);
+    const auditColumns = (this.database.prepare('PRAGMA table_info(audit_events)').all() as unknown as { name: string }[]).map((column) => column.name);
+    if (!auditColumns.includes('reason_code')) this.database.exec("ALTER TABLE audit_events ADD COLUMN reason_code TEXT NOT NULL DEFAULT 'legacy_event'");
+    if (!auditColumns.includes('correlation_id')) this.database.exec("ALTER TABLE audit_events ADD COLUMN correlation_id TEXT NOT NULL DEFAULT 'legacy_event'");
   }
 
   ensureOperator(): SyntheticAccount {
@@ -228,7 +231,7 @@ export class TestStore {
   }
 
   private audit(actorId: string | null, action: string, targetType: string, targetId: string) {
-    this.database.prepare('INSERT INTO audit_events (id, actor_id, action, target_type, target_id, occurred_at) VALUES (?, ?, ?, ?, ?, ?)').run(randomUUID(), actorId, action, targetType, targetId, now());
+    this.database.prepare('INSERT INTO audit_events (id, actor_id, action, reason_code, correlation_id, target_type, target_id, occurred_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(randomUUID(), actorId, action, action.replaceAll('.', '_'), randomUUID(), targetType, targetId, now());
   }
 }
 

@@ -70,6 +70,7 @@ test('synthetic evidence stays private and fails closed when watermark or scanne
 });
 
 test('protected operations decisions publish only a clean, doubly-approved demo listing to buyer search', async () => {
+  assert.equal((await json('/operations/reviews')).response.status, 401);
   const seller = await json('/test-auth/session', { method: 'POST', body: JSON.stringify({ email: 'seller-one@example.test' }) });
   const sellerCookie = seller.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(sellerCookie);
   assert.equal((await json('/operations/reviews', { headers: { cookie: sellerCookie } })).response.status, 403);
@@ -127,4 +128,11 @@ test('operator advances Passport through version-checked synthetic transfer and 
   assert.equal((await json(`/operations/passports/${passport.id}/transition`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ action: 'confirm_payment', expectedVersion: 7 }) })).response.status, 409);
   const buyer = await json('/test-auth/session', { method: 'POST', body: JSON.stringify({ email: 'buyer-one@example.test' }) }); const buyerCookie = buyer.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(buyerCookie);
   const buyerPassport = ((await json('/passports', { headers: { cookie: buyerCookie } })).body?.passports as { status: string; version: number }[])[0]; assert.equal(buyerPassport.status, 'checked_in'); assert.equal(buyerPassport.version, 7);
+});
+
+test('audit records carry actor, reason, correlation, target and timestamp without document content', () => {
+  const store = new TestStore(':memory:'); const account = store.createAccount('audit@example.test', 'Demo Audit User'); assert.ok(account);
+  const row = store.database.prepare('SELECT actor_id, action, reason_code, correlation_id, target_type, target_id, occurred_at FROM audit_events ORDER BY occurred_at DESC LIMIT 1').get() as Record<string, string>;
+  assert.equal(row.actor_id, account.id); assert.equal(row.action, 'account.created'); assert.equal(row.reason_code, 'account_created'); assert.match(row.correlation_id, /^[0-9a-f-]{36}$/); assert.equal(row.target_type, 'account'); assert.equal(row.target_id, account.id); assert.match(row.occurred_at, /^\d{4}-\d{2}-\d{2}T/);
+  assert.equal(Object.values(row).some((value) => value.includes('SYNTHETIC TEST DOCUMENT')), false);
 });
