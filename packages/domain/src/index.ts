@@ -132,6 +132,27 @@ export interface User {
   createdAt: ISODateTime;
 }
 
+export interface SyntheticAccount {
+  id: EntityId;
+  email: string;
+  displayName: string;
+  createdAt: ISODateTime;
+}
+
+export interface SellerReservationDraft {
+  id: EntityId;
+  ownerId: EntityId;
+  hotelName: string;
+  city: string;
+  checkIn: ISODate;
+  checkOut: ISODate;
+  guestCount: number;
+  status: 'draft';
+  synthetic: true;
+  createdAt: ISODateTime;
+  updatedAt: ISODateTime;
+}
+
 export type PassportStatus =
   | 'under_review'
   | 'more_information_needed'
