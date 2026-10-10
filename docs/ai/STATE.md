@@ -47,6 +47,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | TASK-0016 | `task-0016/evidence-linkage` | `ff855cda215f452d763b1292c46ebd347dedf170` | durable repository links and external-authority classification for completed project controls | 30 path checks, 15 commit ancestry checks, remote Git ref reads, document link/diff review |
 | TASK-0017–TASK-0025 | `task-0016/evidence-linkage` | `744d62be458a25523c6e727754228729b23a0357` | governance continuation: open questions, data/security review, access boundaries, traceability, rollback, review map and runbook | document link/diff review; TASK-0023 and TASK-0025 explicitly blocked by unresolved external authority |
 | TASK-0026–TASK-0050 | `task-0016/evidence-linkage` | `c42ec7f0adc6f18198d9114c3b6e2f145982432e` | repository and deployment baseline mapped to existing controls and current remote state | baseline/link/diff review; TASK-0045–TASK-0050 blocked at hosted or approval gates |
+| UI/UX brief TASK-001 | `task-0016/evidence-linkage` | `e04efd750deaa16d1e12f48f8a28c34f0496c32d` | local customer, operations and API route audit with truthful empty/disabled-state findings | route HTTP checks, source inspection and diff review; browser screenshots unavailable in this runtime |
 
 ## Persistent controls and blockers
 
@@ -72,4 +73,5 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 - TASK-0016 links every completed canonical task through TASK-0015 to 30 durable repository artifacts and 15 ancestor commits. Remote Git state is server-confirmed; unavailable external reads remain explicitly below server-verified status.
 - TASK-0017 through TASK-0022 and TASK-0024 now have repository evidence. TASK-0023 remains blocked by unresolved legal, provider, hosted-state, retention and release-approval gaps; TASK-0025 therefore remains blocked and is not a production authorization.
 - TASK-0026 through TASK-0044 now map the repository/deployment baseline to durable controls. TASK-0045 through TASK-0050 remain blocked because launch-gate acceptance needs hosted checks, provider authority, multidisciplinary signoff and approval.
+- UI/UX brief TASK-001 audited customer `/`, `/passport`, `/operations`, operations `/`, customer/operations `/admin/login`, and API health/inventory/unknown routes. `/admin/login` is missing; inventory correctly fails closed with `503 INVENTORY_NOT_CONFIGURED`; no fake privileged or booking state was added.
 - Next: review the baseline, then continue with the next dependency-ready workstream while preserving the blocked gates.
