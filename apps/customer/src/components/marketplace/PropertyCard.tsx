@@ -1,13 +1,15 @@
 import type { MarketplaceOffer } from '@stayrelay/domain';
+import { Link } from 'react-router';
 import { formatMoney } from './formatMoney';
 
 interface PropertyCardProps {
   offer: MarketplaceOffer;
   selected: boolean;
+  detailsHref: string;
   onSelect: (offer: MarketplaceOffer) => void;
 }
 
-export function PropertyCard({ offer, selected, onSelect }: PropertyCardProps) {
+export function PropertyCard({ offer, selected, detailsHref, onSelect }: PropertyCardProps) {
   const { property } = offer;
   const cover = property.media[0];
   return (
@@ -39,9 +41,9 @@ export function PropertyCard({ offer, selected, onSelect }: PropertyCardProps) {
         </div>
       </button>
       <div className="px-5 pb-5">
-        <button className="min-h-11 w-full rounded-control border border-brand-600 bg-brand-50 px-4 text-sm font-semibold text-brand-700 hover:bg-[#E2E9FF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2" type="button" aria-pressed={selected} onClick={() => onSelect(offer)}>
-          {selected ? 'Selected for price details' : 'View price details'}
-        </button>
+        <Link className="grid min-h-11 w-full place-items-center rounded-control border border-brand-600 bg-brand-50 px-4 text-sm font-semibold text-brand-700 hover:bg-[#E2E9FF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2" to={detailsHref}>
+          View stay details
+        </Link>
       </div>
     </article>
   );

@@ -254,7 +254,13 @@ export function MarketplacePage() {
             {showingPreview && <p className="rounded-control border border-attention-800/20 bg-attention-50 px-4 py-3 text-sm leading-6 text-attention-800">These fictional examples demonstrate card selection and price presentation only. They are not real hotels, verified reservations, available inventory, or purchasable offers. Date filters do not apply to these examples.</p>}
             <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
               {visibleOffers.map((offer) => (
-                <PropertyCard key={offer.id} offer={offer} selected={selectedOfferId === offer.id} onSelect={selectOffer} />
+                <PropertyCard
+                  key={offer.id}
+                  offer={offer}
+                  selected={selectedOfferId === offer.id}
+                  detailsHref={`/properties/${offer.property.id}${searchParams.size ? `?${searchParams.toString()}` : ''}`}
+                  onSelect={selectOffer}
+                />
               ))}
             </div>
           </>
