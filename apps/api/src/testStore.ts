@@ -1,6 +1,8 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import type { SellerReservationDraft, SyntheticAccount } from '@stayrelay/domain';
+import type { SellerReservationDraft, SyntheticAccount, SyntheticEvidenceMetadata } from '@stayrelay/domain';
 
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
 
@@ -9,6 +11,7 @@ function digest(token: string) { return createHash('sha256').update(token).diges
 
 interface AccountRow { id: string; email: string; display_name: string; created_at: string }
 interface DraftRow { id: string; owner_id: string; hotel_name: string; city: string; check_in: string; check_out: string; guest_count: number; status: 'draft'; created_at: string; updated_at: string }
+interface EvidenceRow { id: string; draft_id: string; owner_id: string; original_filename: string; content_type: 'text/plain' | 'application/pdf'; byte_size: number; sha256: string; state: 'quarantined' | 'simulated_clean'; scan_mode: SyntheticEvidenceMetadata['scanMode']; storage_key: string; created_at: string }
 
 function accountFromRow(row: AccountRow): SyntheticAccount {
   return { id: row.id, email: row.email, displayName: row.display_name, createdAt: row.created_at };
@@ -18,10 +21,17 @@ function draftFromRow(row: DraftRow): SellerReservationDraft {
   return { id: row.id, ownerId: row.owner_id, hotelName: row.hotel_name, city: row.city, checkIn: row.check_in, checkOut: row.check_out, guestCount: row.guest_count, status: row.status, synthetic: true, createdAt: row.created_at, updatedAt: row.updated_at };
 }
 
+function evidenceFromRow(row: EvidenceRow): SyntheticEvidenceMetadata {
+  return { id: row.id, draftId: row.draft_id, ownerId: row.owner_id, originalFilename: row.original_filename, contentType: row.content_type, byteSize: row.byte_size, sha256: row.sha256, state: row.state, scanMode: row.scan_mode, createdAt: row.created_at };
+}
+
 export class TestStore {
   readonly database: DatabaseSync;
+  readonly storageRoot: string;
 
-  constructor(path: string) {
+  constructor(path: string, storageRoot = '/tmp/stayrelay-private-evidence') {
+    this.storageRoot = storageRoot;
+    mkdirSync(storageRoot, { recursive: true, mode: 0o700 });
     this.database = new DatabaseSync(path);
     this.database.exec(`
       PRAGMA foreign_keys = ON;
@@ -29,6 +39,7 @@ export class TestStore {
       CREATE TABLE IF NOT EXISTS sessions (token_digest TEXT PRIMARY KEY, account_id TEXT NOT NULL REFERENCES accounts(id), expires_at TEXT NOT NULL, revoked_at TEXT);
       CREATE TABLE IF NOT EXISTS seller_drafts (id TEXT PRIMARY KEY, owner_id TEXT NOT NULL REFERENCES accounts(id), hotel_name TEXT NOT NULL, city TEXT NOT NULL, check_in TEXT NOT NULL, check_out TEXT NOT NULL, guest_count INTEGER NOT NULL, status TEXT NOT NULL CHECK(status = 'draft'), created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS audit_events (id TEXT PRIMARY KEY, actor_id TEXT, action TEXT NOT NULL, target_type TEXT NOT NULL, target_id TEXT NOT NULL, occurred_at TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS synthetic_evidence (id TEXT PRIMARY KEY, draft_id TEXT NOT NULL REFERENCES seller_drafts(id), owner_id TEXT NOT NULL REFERENCES accounts(id), original_filename TEXT NOT NULL, content_type TEXT NOT NULL, byte_size INTEGER NOT NULL, sha256 TEXT NOT NULL, state TEXT NOT NULL CHECK(state IN ('quarantined','simulated_clean')), scan_mode TEXT NOT NULL, storage_key TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL);
     `);
   }
 
@@ -83,6 +94,26 @@ export class TestStore {
   getDraft(ownerId: string, draftId: string): SellerReservationDraft | undefined {
     const row = this.database.prepare('SELECT * FROM seller_drafts WHERE id = ? AND owner_id = ?').get(draftId, ownerId) as DraftRow | undefined;
     return row ? draftFromRow(row) : undefined;
+  }
+
+  createEvidence(ownerId: string, draftId: string, originalFilename: string, contentType: SyntheticEvidenceMetadata['contentType'], bytes: Buffer, scanMode: SyntheticEvidenceMetadata['scanMode']): SyntheticEvidenceMetadata {
+    const id = randomUUID(); const createdAt = now(); const storageKey = `${id}.bin`;
+    const state = scanMode === 'simulated_clean' ? 'simulated_clean' : 'quarantined';
+    writeFileSync(join(this.storageRoot, storageKey), bytes, { mode: 0o600, flag: 'wx' });
+    this.database.prepare('INSERT INTO synthetic_evidence (id, draft_id, owner_id, original_filename, content_type, byte_size, sha256, state, scan_mode, storage_key, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(id, draftId, ownerId, originalFilename, contentType, bytes.byteLength, createHash('sha256').update(bytes).digest('hex'), state, scanMode, storageKey, createdAt);
+    this.audit(ownerId, 'synthetic_evidence.uploaded', 'synthetic_evidence', id);
+    return this.getEvidence(ownerId, id)?.metadata as SyntheticEvidenceMetadata;
+  }
+
+  listEvidence(ownerId: string, draftId: string): SyntheticEvidenceMetadata[] {
+    const rows = this.database.prepare('SELECT * FROM synthetic_evidence WHERE owner_id = ? AND draft_id = ? ORDER BY created_at DESC').all(ownerId, draftId) as unknown as EvidenceRow[];
+    return rows.map(evidenceFromRow);
+  }
+
+  getEvidence(ownerId: string, evidenceId: string): { metadata: SyntheticEvidenceMetadata; bytes: Buffer } | undefined {
+    const row = this.database.prepare('SELECT * FROM synthetic_evidence WHERE id = ? AND owner_id = ?').get(evidenceId, ownerId) as EvidenceRow | undefined;
+    if (!row) return undefined;
+    return { metadata: evidenceFromRow(row), bytes: readFileSync(join(this.storageRoot, row.storage_key)) };
   }
 
   private audit(actorId: string | null, action: string, targetType: string, targetId: string) {

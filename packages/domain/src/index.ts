@@ -153,6 +153,19 @@ export interface SellerReservationDraft {
   updatedAt: ISODateTime;
 }
 
+export interface SyntheticEvidenceMetadata {
+  id: EntityId;
+  draftId: EntityId;
+  ownerId: EntityId;
+  originalFilename: string;
+  contentType: 'text/plain' | 'application/pdf';
+  byteSize: number;
+  sha256: string;
+  state: 'quarantined' | 'simulated_clean';
+  scanMode: 'simulated_clean' | 'simulated_unavailable' | 'watermark_rejected';
+  createdAt: ISODateTime;
+}
+
 export type PassportStatus =
   | 'under_review'
   | 'more_information_needed'
