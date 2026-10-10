@@ -176,6 +176,15 @@ export interface DemoReviewQueueItem {
   published: boolean;
 }
 
+export interface SyntheticOrder {
+  id: EntityId;
+  buyerId: EntityId;
+  draftId: EntityId;
+  status: 'confirmation_pending';
+  synthetic: true;
+  createdAt: ISODateTime;
+}
+
 export type PassportStatus =
   | 'under_review'
   | 'more_information_needed'

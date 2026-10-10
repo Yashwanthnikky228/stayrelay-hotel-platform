@@ -1,12 +1,36 @@
+import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
+import type { PropertyOffer } from '@stayrelay/domain';
 import { EconomicsBreakdown } from '../components/marketplace/EconomicsBreakdown';
 import { previewOffers } from '../data/previewOffers';
+import { accountApi } from '../services/account';
+import { searchPropertyOffers } from '../services/marketplace';
 
 export function PropertyDetailPage() {
   const { propertyId } = useParams();
   const [searchParams] = useSearchParams();
-  const offer = previewOffers.find((candidate) => candidate.property.id === propertyId);
+  const previewOffer = previewOffers.find((candidate) => candidate.property.id === propertyId);
+  const [liveOffer, setLiveOffer] = useState<PropertyOffer>();
+  const [loading, setLoading] = useState(!previewOffer);
+  const [message, setMessage] = useState<string>();
   const returnHref = `/${searchParams.size ? `?${searchParams.toString()}` : ''}`;
+
+  useEffect(() => {
+    if (previewOffer) return;
+    const checkIn = searchParams.get('checkIn') ?? ''; const checkOut = searchParams.get('checkOut') ?? ''; const guests = Number(searchParams.get('guests'));
+    if (!checkIn || !checkOut || !Number.isInteger(guests)) { setLoading(false); return; }
+    void searchPropertyOffers({ destination: searchParams.get('destination') ?? '', checkIn, checkOut, guests }).then((offers) => setLiveOffer(offers.find((candidate) => candidate.property.id === propertyId))).catch(() => setLiveOffer(undefined)).finally(() => setLoading(false));
+  }, [previewOffer, propertyId, searchParams]);
+
+  const offer = previewOffer ?? liveOffer;
+  async function simulateCheckout() {
+    if (!liveOffer) return;
+    setMessage(undefined);
+    try { await accountApi.checkout(liveOffer.id); setMessage('Synthetic order created. Your Reservation Passport is ready.'); }
+    catch (error) { setMessage(error instanceof Error ? error.message : 'Checkout simulation could not be created.'); }
+  }
+
+  if (loading) return <p className="rounded-card border border-divider bg-surface p-6" role="status">Loading the approved synthetic stay…</p>;
 
   if (!offer) {
     return (
@@ -29,7 +53,7 @@ export function PropertyDetailPage() {
           <div aria-hidden="true" className="absolute -right-16 -top-20 h-72 w-72 rounded-full border border-white/60" />
           <div aria-hidden="true" className="absolute left-12 top-12 h-24 w-40 rounded-[50%] bg-white/25 blur-2xl" />
           <div className="relative w-full rounded-card border border-white/60 bg-white/90 p-5 backdrop-blur-sm md:max-w-2xl md:p-7">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-attention-800">Fictional design preview · not bookable</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-attention-800">{previewOffer ? 'Fictional design preview · not bookable' : 'Approved synthetic demo · no real reservation'}</p>
             <p className="mt-4 text-sm text-ink-600">{property.destination}</p>
             <h1 className="mt-1 font-editorial text-4xl leading-tight text-ink-900 md:text-6xl">{property.name}</h1>
             <p className="mt-4 max-w-xl leading-7 text-ink-600">{property.summary}</p>
@@ -60,11 +84,9 @@ export function PropertyDetailPage() {
 
         <aside className="space-y-4" aria-label="Stay summary">
           <EconomicsBreakdown offer={offer} />
-          <div className="rounded-card border border-attention-800/20 bg-attention-50 p-5 text-sm leading-6 text-attention-800">
-            <strong className="block">Demo action only</strong>
-            Checkout is intentionally unavailable for this illustrative record. No money moves and no reservation is created.
-          </div>
-          <button className="min-h-12 w-full cursor-not-allowed rounded-control bg-divider px-5 font-semibold text-ink-600" type="button" disabled>Request unavailable in preview</button>
+          <div className="rounded-card border border-attention-800/20 bg-attention-50 p-5 text-sm leading-6 text-attention-800"><strong className="block">Demo action only</strong>{previewOffer ? 'Checkout is intentionally unavailable for this illustrative record.' : 'This creates a synthetic order and Passport status only.'} No money moves and no real reservation is created.</div>
+          {previewOffer ? <button className="min-h-12 w-full cursor-not-allowed rounded-control bg-divider px-5 font-semibold text-ink-600" type="button" disabled>Request unavailable in preview</button> : <button className="min-h-12 w-full rounded-control bg-brand-600 px-5 font-semibold text-white" type="button" onClick={() => void simulateCheckout()}>Create checkout simulation</button>}
+          {message && <p className="rounded-control bg-brand-50 p-3 text-sm text-brand-700" role="status">{message} {message.includes('ready') && <Link className="font-semibold underline" to="/passport">Open Passport</Link>}</p>}
         </aside>
       </div>
     </div>

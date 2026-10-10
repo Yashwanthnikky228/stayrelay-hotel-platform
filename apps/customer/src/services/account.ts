@@ -1,4 +1,4 @@
-import type { SellerReservationDraft, SyntheticAccount, SyntheticEvidenceMetadata } from '@stayrelay/domain';
+import type { ReservationPassport, SellerReservationDraft, SyntheticAccount, SyntheticEvidenceMetadata, SyntheticOrder } from '@stayrelay/domain';
 
 export class AccountApiError extends Error {
   constructor(message: string, readonly status: number, readonly code?: string) { super(message); }
@@ -26,4 +26,6 @@ export const accountApi = {
     if (!response.ok || !payload.evidence) throw new AccountApiError(payload.error?.message ?? 'Synthetic evidence could not be attached.', response.status, payload.error?.code);
     return { evidence: payload.evidence };
   },
+  checkout: (offerId: string) => request<{ order: SyntheticOrder; passport: ReservationPassport }>('/checkout-simulations', { method: 'POST', body: JSON.stringify({ offerId }) }),
+  passports: () => request<{ passports: ReservationPassport[] }>('/passports'),
 };

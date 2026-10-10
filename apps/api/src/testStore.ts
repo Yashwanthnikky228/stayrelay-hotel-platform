@@ -2,7 +2,7 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import type { DemoReviewDecision, DemoReviewQueueItem, PropertyOffer, PropertySearchFilters, SellerReservationDraft, SyntheticAccount, SyntheticEvidenceMetadata } from '@stayrelay/domain';
+import type { DemoReviewDecision, DemoReviewQueueItem, PropertyOffer, PropertySearchFilters, ReservationPassport, SellerReservationDraft, SyntheticAccount, SyntheticEvidenceMetadata, SyntheticOrder } from '@stayrelay/domain';
 
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
 
@@ -43,6 +43,8 @@ export class TestStore {
       CREATE TABLE IF NOT EXISTS operator_accounts (account_id TEXT PRIMARY KEY REFERENCES accounts(id));
       CREATE TABLE IF NOT EXISTS demo_reviews (draft_id TEXT PRIMARY KEY REFERENCES seller_drafts(id), eligibility_decision TEXT NOT NULL DEFAULT 'pending', risk_decision TEXT NOT NULL DEFAULT 'pending', eligibility_reviewer_id TEXT, risk_reviewer_id TEXT, updated_at TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS demo_listings (draft_id TEXT PRIMARY KEY REFERENCES seller_drafts(id), published_at TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS synthetic_orders (id TEXT PRIMARY KEY, buyer_id TEXT NOT NULL REFERENCES accounts(id), draft_id TEXT NOT NULL REFERENCES seller_drafts(id), status TEXT NOT NULL CHECK(status = 'confirmation_pending'), created_at TEXT NOT NULL, UNIQUE(buyer_id, draft_id));
+      CREATE TABLE IF NOT EXISTS reservation_passports (id TEXT PRIMARY KEY, order_id TEXT NOT NULL UNIQUE REFERENCES synthetic_orders(id), owner_id TEXT NOT NULL REFERENCES accounts(id), status TEXT NOT NULL CHECK(status = 'payment_confirmation_pending'), version INTEGER NOT NULL, status_updated_at TEXT NOT NULL);
     `);
   }
 
@@ -168,6 +170,29 @@ export class TestStore {
       buyerTotal: { amountMinor: 1250000, currency: 'INR' as const },
       property: { id: `demo-property-${draft.id}`, name: draft.hotelName, destination: draft.city, timezone: 'Asia/Kolkata', summary: 'Approved synthetic demonstration listing. No real reservation or transfer.', media: [], amenities: ['Synthetic demonstration'], inventoryDecision: 'eligible' as const, policyReviewedAt: now() },
     })).filter((offer) => !filters.maxBuyerTotal || offer.buyerTotal.amountMinor <= filters.maxBuyerTotal.amountMinor);
+  }
+
+  createCheckoutSimulation(buyerId: string, offerId: string): { order: SyntheticOrder; passport: ReservationPassport } | 'not_found' | 'own_listing' | 'exists' {
+    const draftId = offerId.startsWith('demo-offer-') ? offerId.slice('demo-offer-'.length) : '';
+    const row = this.database.prepare('SELECT d.* FROM demo_listings l JOIN seller_drafts d ON d.id = l.draft_id WHERE d.id = ?').get(draftId) as DraftRow | undefined;
+    if (!row) return 'not_found';
+    if (row.owner_id === buyerId) return 'own_listing';
+    if (this.database.prepare('SELECT id FROM synthetic_orders WHERE buyer_id = ? AND draft_id = ?').get(buyerId, draftId)) return 'exists';
+    const createdAt = now(); const order: SyntheticOrder = { id: randomUUID(), buyerId, draftId, status: 'confirmation_pending', synthetic: true, createdAt };
+    const passport: ReservationPassport = { id: randomUUID(), bookingId: order.id, ownerId: buyerId, status: 'payment_confirmation_pending', version: 1, statusUpdatedAt: createdAt, nextAction: { label: 'Wait for simulated payment confirmation', owner: 'payment_provider' }, arrivalGuideAvailable: false };
+    this.database.exec('BEGIN');
+    try {
+      this.database.prepare('INSERT INTO synthetic_orders (id, buyer_id, draft_id, status, created_at) VALUES (?, ?, ?, ?, ?)').run(order.id, buyerId, draftId, order.status, createdAt);
+      this.database.prepare('INSERT INTO reservation_passports (id, order_id, owner_id, status, version, status_updated_at) VALUES (?, ?, ?, ?, ?, ?)').run(passport.id, order.id, buyerId, passport.status, passport.version, createdAt);
+      this.audit(buyerId, 'checkout_simulation.created', 'synthetic_order', order.id); this.audit(buyerId, 'reservation_passport.created', 'reservation_passport', passport.id);
+      this.database.exec('COMMIT');
+    } catch (error) { this.database.exec('ROLLBACK'); throw error; }
+    return { order, passport };
+  }
+
+  listPassports(ownerId: string): ReservationPassport[] {
+    const rows = this.database.prepare('SELECT id, order_id, owner_id, status, version, status_updated_at FROM reservation_passports WHERE owner_id = ? ORDER BY status_updated_at DESC').all(ownerId) as unknown as { id: string; order_id: string; owner_id: string; status: ReservationPassport['status']; version: number; status_updated_at: string }[];
+    return rows.map((row) => ({ id: row.id, bookingId: row.order_id, ownerId: row.owner_id, status: row.status, version: row.version, statusUpdatedAt: row.status_updated_at, nextAction: { label: 'Wait for simulated payment confirmation', owner: 'payment_provider' }, arrivalGuideAvailable: false }));
   }
 
   private audit(actorId: string | null, action: string, targetType: string, targetId: string) {

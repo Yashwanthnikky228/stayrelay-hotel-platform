@@ -18,7 +18,7 @@ function setSession(response: Response, token: string) {
 }
 
 export function handleTestAccountRoute(request: Request, response: Response, store: TestStore, enabled: boolean): boolean {
-  if (!request.path.startsWith('/test-auth') && request.path !== '/account' && request.path !== '/properties' && !request.path.startsWith('/seller-drafts') && !request.path.startsWith('/synthetic-evidence') && !request.path.startsWith('/operations/')) return false;
+  if (!request.path.startsWith('/test-auth') && request.path !== '/account' && request.path !== '/properties' && request.path !== '/checkout-simulations' && request.path !== '/passports' && !request.path.startsWith('/seller-drafts') && !request.path.startsWith('/synthetic-evidence') && !request.path.startsWith('/operations/')) return false;
   response.setHeader('Cache-Control', 'no-store');
   if (!enabled && request.path === '/properties') return false;
   if (!enabled) { error(response, 503, 'TEST_AUTH_DISABLED', 'Local synthetic authentication is disabled.'); return true; }
@@ -70,6 +70,14 @@ export function handleTestAccountRoute(request: Request, response: Response, sto
     error(response, 405, 'METHOD_NOT_ALLOWED', 'Method not allowed for this operations route.'); return true;
   }
   if (request.path === '/account' && request.method === 'GET') { response.json({ account }); return true; }
+  if (request.path === '/checkout-simulations' && request.method === 'POST') {
+    const result = store.createCheckoutSimulation(account.id, String(body(request).offerId ?? ''));
+    if (result === 'not_found') { error(response, 404, 'OFFER_NOT_FOUND', 'Eligible synthetic offer not found.'); return true; }
+    if (result === 'own_listing') { error(response, 409, 'OWN_LISTING_NOT_ALLOWED', 'A seller cannot buy their own synthetic listing.'); return true; }
+    if (result === 'exists') { error(response, 409, 'ORDER_EXISTS', 'A synthetic order already exists for this buyer and offer.'); return true; }
+    response.status(201).json(result); return true;
+  }
+  if (request.path === '/passports' && request.method === 'GET') { response.json({ passports: store.listPassports(account.id) }); return true; }
   if (request.path === '/seller-drafts' && request.method === 'GET') { response.json({ drafts: store.listDrafts(account.id) }); return true; }
   if (request.path === '/seller-drafts' && request.method === 'POST') {
     const input = body(request); const hotelName = String(input.hotelName ?? '').trim(); const city = String(input.city ?? '').trim(); const checkIn = String(input.checkIn ?? ''); const checkOut = String(input.checkOut ?? ''); const guestCount = Number(input.guestCount);

@@ -95,3 +95,21 @@ test('protected operations decisions publish only a clean, doubly-approved demo 
   assert.equal((rejected.body?.review as { published: boolean }).published, false);
   assert.deepEqual((await json('/properties?destination=Mumbai&checkIn=2027-01-12&checkOut=2027-01-14&guests=2')).body?.offers, []);
 });
+
+test('checkout simulation creates an owner-scoped Reservation Passport without moving money', async () => {
+  const seller = await json('/test-auth/session', { method: 'POST', body: JSON.stringify({ email: 'seller-one@example.test' }) });
+  const sellerCookie = seller.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(sellerCookie);
+  const queue = await json('/test-auth/operator-session', { method: 'POST', body: JSON.stringify({ email: 'operator@stayrelay.test' }) });
+  const operatorCookie = queue.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(operatorCookie);
+  const reviews = await json('/operations/reviews', { headers: { cookie: operatorCookie } }); const draftId = ((reviews.body?.reviews as { draft: { id: string } }[])[0]).draft.id;
+  await json(`/operations/reviews/${draftId}/risk`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ decision: 'approved' }) });
+
+  const buyer = await json('/test-auth/accounts', { method: 'POST', body: JSON.stringify({ email: 'buyer-one@example.test', displayName: 'Demo Buyer One' }) });
+  const buyerCookie = buyer.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(buyerCookie);
+  const checkout = await json('/checkout-simulations', { method: 'POST', headers: { cookie: buyerCookie }, body: JSON.stringify({ offerId: `demo-offer-${draftId}` }) });
+  assert.equal(checkout.response.status, 201); assert.equal((checkout.body?.order as { status: string }).status, 'confirmation_pending'); assert.equal((checkout.body?.passport as { status: string }).status, 'payment_confirmation_pending');
+  assert.equal((await json('/checkout-simulations', { method: 'POST', headers: { cookie: buyerCookie }, body: JSON.stringify({ offerId: `demo-offer-${draftId}` }) })).response.status, 409);
+  assert.equal(((await json('/passports', { headers: { cookie: buyerCookie } })).body?.passports as unknown[]).length, 1);
+  assert.equal(((await json('/passports', { headers: { cookie: sellerCookie } })).body?.passports as unknown[]).length, 0);
+  assert.equal((await json('/checkout-simulations', { method: 'POST', headers: { cookie: sellerCookie }, body: JSON.stringify({ offerId: `demo-offer-${draftId}` }) })).response.status, 409);
+});
