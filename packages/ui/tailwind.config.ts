@@ -5,6 +5,13 @@ export default {
   theme: {
     extend: {
       colors: {
+        cloud: '#F8FAFC',
+        white: '#FFFFFF',
+        slate: '#475569',
+        relay: '#2563EB',
+        verified: '#15803D',
+        caution: '#B45309',
+        risk: '#B91C1C',
         canvas: '#F5F7FA',
         surface: '#FFFFFF',
         ink: {
@@ -30,12 +37,24 @@ export default {
         operations: '90rem',
       },
       borderRadius: {
+        standard: '0.75rem',
         control: '0.5rem',
         card: '1rem',
         signature: '1.5rem',
       },
       boxShadow: {
         overlay: '0 16px 48px rgb(20 34 55 / 16%)',
+      },
+      spacing: {
+        '18': '4.5rem',
+        '22': '5.5rem',
+      },
+      zIndex: {
+        base: '0',
+        content: '10',
+        sticky: '20',
+        overlay: '40',
+        modal: '50',
       },
     },
   },

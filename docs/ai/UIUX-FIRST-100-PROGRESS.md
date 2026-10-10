@@ -35,6 +35,8 @@ flowchart LR
 | 001 | Done | [Route audit](UIUX-BRIEF-TASK-001-ROUTE-AUDIT.md) |
 | 002–003 | Done | [Scope and toolchain reconciliation](UIUX-FIRST-100-SCOPE.md) |
 | 004–008 | Done | [Product contracts](UIUX-FIRST-100-CONTRACTS.md) |
-| 009–100 | Not started | No completion claim |
+| 009 | Done | Token layer in `packages/ui/tailwind.config.ts` and `packages/ui/src/styles.css`; typecheck/build pass |
+| 010 | Blocked | Approved local Inter Variable and Newsreader Variable WOFF2 assets are not present |
+| 011–100 | Not started | No completion claim |
 
 The next bounded implementation is TASK-009: accessible design tokens. The canonical governance branch currently carries the audit commits; feature work must use atomic UI/UX branches and remain reviewable.
