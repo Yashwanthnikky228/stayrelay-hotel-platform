@@ -4,7 +4,9 @@
 **Recorded:** 2026-10-09  
 **Repository:** https://github.com/Yashwanthnikky228/stayrelay-hotel-platform  
 **Baseline:** `task-001/repository-baseline` at `085f2944c5a0e519ee4b92b2be923d14eeb891c7`  
-**Roadmap:** Final Pending Task List & Project Roadmap v3; 180 tasks, verified dependency graph.
+**Execution controller:** `docs/project-control/StayRelay_Exact_1100_Task_Production_Tracker.xlsx`; exact TASK-0001 through TASK-1100 ledger supplied 2026-10-10.
+
+The 1,100-task controller supersedes the earlier 180-task roadmap for future task IDs, dependencies, and status. Existing 180-task branches and records remain historical implementation evidence and are not renumbered. TASK-0002 owns the detailed source-map reconciliation.
 
 This file links the sources that govern repository work. It does not copy the dossier into Git, approve unapproved business decisions, or turn planning documents into evidence of production behavior or external authorization. Re-read the relevant source sections for every task.
 
@@ -12,7 +14,7 @@ This file links the sources that govern repository work. It does not copy the do
 
 ### Execution order
 
-The [Roadmap v3](https://docs.google.com/spreadsheets/d/1YNKI5HK_CFAhP63FGPTPthzTRDddeWg-8IcOLfCTaYs/edit) is the dependency-ordered execution register. Preserve TASK-001 through TASK-180 and follow its dependencies and Audit Completion Crosswalk. Do not mark a task complete without its required evidence.
+The [1,100-task production tracker](../project-control/StayRelay_Exact_1100_Task_Production_Tracker.xlsx) is the current dependency-ordered execution register. Preserve TASK-0001 through TASK-1100 and follow its dependencies. Do not mark a task complete without its acceptance evidence. The earlier [Roadmap v3](https://docs.google.com/spreadsheets/d/1YNKI5HK_CFAhP63FGPTPthzTRDddeWg-8IcOLfCTaYs/edit) remains an audited historical source for prior implementation evidence.
 
 ### Product and technical decisions
 
@@ -48,6 +50,7 @@ Apply the newest explicitly audited or founder-approved source. For current plan
 
 ### Recorded repository decisions
 
+- [TASK-0001 governing charter](../project-control/GOVERNING-CHARTER.md) establishes execution authority, product and production boundaries, server-authoritative truth, evidence rules, and disclosed blockers for the 1,100-task controller.
 - [ADR-0001 — Pin the Vite 8.3 baseline](../adr/0001-vite-8-baseline.md) resolves TASK-003 to Vite `8.3.4`, locked and tested with Node `24.19.0`. It resolves only the Vite line; TASK-004 still owns verification of the broader framework/toolchain and provider assumptions.
 - [ADR-0002 — Architecture decision register](../adr/0002-architecture-decision-register.md) records the modular-monolith, trust-chain, risk, payout, AI, provider-adapter, and conditional provider decisions.
 - [ADR-0003 — Foundation runtime and hosting boundaries](../adr/0003-foundation-runtime-and-hosting-boundaries.md) records the tested pnpm/Router workspace and a time-bounded, unverified Vercel preview exception. It authorizes no provider or production action.
