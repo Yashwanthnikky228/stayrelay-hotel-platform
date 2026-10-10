@@ -1,6 +1,6 @@
 # StayRelay AI Handoff State
 
-Updated: 2026-10-10. Active chunk: TASK-0016–TASK-0050 reconciliation.
+Updated: 2026-10-10. Active chunk: supplemental synthetic product implementation.
 Repository: `Yashwanthnikky228/stayrelay-hotel-platform`.
 Current content branch/commit are the last row; this handoff is committed separately to avoid a self-referential SHA.
 Default main observed: `c2e337e4a083ceac61e890c4c02d6d7865c9edf6`; no merge or production action.
@@ -47,6 +47,8 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | TASK-0016 | `task-0016/evidence-linkage` | `ff855cda215f452d763b1292c46ebd347dedf170` | durable repository links and external-authority classification for completed project controls | 30 path checks, 15 commit ancestry checks, remote Git ref reads, document link/diff review |
 | TASK-0017–TASK-0025 | `task-0016/evidence-linkage` | `744d62be458a25523c6e727754228729b23a0357` | governance continuation: open questions, data/security review, access boundaries, traceability, rollback, review map and runbook | document link/diff review; TASK-0023–TASK-0025 blocked because the runbook artifact cannot bypass TASK-0023 |
 | TASK-0026–TASK-0050 | `task-0016/evidence-linkage` | `c42ec7f0adc6f18198d9114c3b6e2f145982432e` | repository and deployment baseline mapped to existing controls and current remote state | baseline/link/diff review; TASK-0045–TASK-0050 blocked at hosted or approval gates |
+| SR discovery slice | `task/sr-visible-discovery-slice` | `a70b99a891f1bac24c21619f278b76f168dc6f92` | synthetic homepage search to property detail with preserved URL state and disabled checkout | typecheck, both builds, 9 unit tests, Chromium navigation and screenshot pass |
+| SR location/navigation | `task/sr-location-responsive-navigation` | `98ae6f9` | exact-match synthetic destination context and responsive customer navigation | typecheck, both builds, 11 unit tests, Chromium 390px and desktop navigation pass |
 
 ## Persistent controls and blockers
 
@@ -73,4 +75,6 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 - TASK-0017 through TASK-0022 are complete. TASK-0024 has a repository runbook artifact but is blocked because required predecessor TASK-0023 remains blocked by unresolved legal, provider, hosted-state, retention and release-approval gaps. TASK-0025 therefore remains blocked and is not a production authorization.
 - TASK-0026 through TASK-0044 now map the repository/deployment baseline to durable controls. TASK-0045 through TASK-0050 remain blocked because launch-gate acceptance needs hosted checks, provider authority, multidisciplinary signoff and approval.
 - Reconciliation accepts the canonical documentation history through `d705732` and excludes later UI bulk commits pending a task-by-task audit; see `TASK-0016-0050-RECONCILIATION.md`.
+- The founder-supplied 750-row synthetic coverage framework is retained separately as `docs/project-control/StayRelay_750_Task_Supplemental_Tracker.xlsx`. It contains a validated per-package dependency DAG and implementation evidence but does not replace or unblock the canonical 1,100-task approval controller.
+- Synthetic discovery implementation now includes a dedicated fictional property-detail route, preserved search state, exact-match Mumbai/Hyderabad/Bengaluru context, and responsive navigation. Live inventory, checkout, identity collection and money movement remain disabled.
 - Next canonical task is TASK-0051, but it depends on blocked TASK-0050. TASK-0076 shares that dependency. Continue only with an independently dependency-ready row or after the named external gates are evidenced.
