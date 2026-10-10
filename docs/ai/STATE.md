@@ -1,6 +1,6 @@
 # StayRelay AI Handoff State
 
-Updated: 2026-10-10. Active chunk: TASK-0013.
+Updated: 2026-10-10. Active chunk: TASK-0014.
 Repository: `Yashwanthnikky228/stayrelay-hotel-platform`.
 Current content branch/commit are the last row; this handoff is committed separately to avoid a self-referential SHA.
 Default main observed: `d7991ea5add5c01c1cc681f59e2285ab6bfea3ee`; no merge or production action.
@@ -42,6 +42,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | TASK-0011 | `task-0011/dependency-critical-path` | `985f272916f5c7793416912bed72ecad681df9ba` | canonical 1,100-task dependency graph, parallel streams, convergence gates and structural critical chain | graph integrity/ready-set/longest-chain checks, typecheck, both builds, 9 unit tests |
 | TASK-0012 | `task-0012/branch-environment-policy` | `a8c6a8d745d3f439e9ab525afa5660f3b8241599` | branch classes plus local, preview, staging and production isolation/promotion standard | repository/ADR/config review, typecheck, both builds, 9 unit tests |
 | TASK-0013 | `task-0013/change-control` | `62d8b6ec03ea1dacde8f52dc2537a16153387083` | standard, controlled, production and emergency change procedure with approval and rollback paths | control-source reconciliation, Vercel negative authorization reads, typecheck, both builds, 9 unit tests |
+| TASK-0014 | `task-0014/working-templates` | `73a6d9d662e269fba08fd9a6b521f2f51f5b741a` | task, ADR, incident and handoff templates capturing sources, invariants, tests and continuation state | template field/coverage review, typecheck, both builds, 9 unit tests |
 
 ## Persistent controls and blockers
 
@@ -61,4 +62,6 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 - TASK-0011 verifies 1,100 nodes and 1,122 resolved edges with no cycle. TASK-0011 and TASK-0026 were the two dependency-ready rows at analysis time; production/provider/review gates remain separate from dependency readiness.
 - TASK-0012 separates task completion from PR review, merge, preview, staging and production promotion. Hosted enforcement remains blocked by missing Vercel identity/link/deployment evidence and unavailable GitHub API review/CI evidence.
 - TASK-0013 defines change intake, classification, implementation, review, promotion, emergency and rollback controls. Current Vercel identity returned `404 User not found`; configured team and both project reads returned `403 Not authorized`, so deployment remains blocked.
-- Next: review TASK-0013, then execute dependency-ready TASK-0014 working templates or the independent TASK-0026 root on its own branch.
+- TASK-0014 provides working task, ADR, incident and handoff templates. Templates structure evidence but do not manufacture approvals, provider state, tests or deployment results.
+- The Vercel customer project exists on `main`, while `apps/operations` is absent from `main`; operations-project creation remains blocked pending reviewed integration. Do not point it at `apps/api` or the customer project.
+- Next: review TASK-0014, then execute dependency-ready TASK-0015 control register or the independent TASK-0026 root on its own branch.
