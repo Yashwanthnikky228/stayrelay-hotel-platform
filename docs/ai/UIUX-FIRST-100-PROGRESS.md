@@ -61,6 +61,15 @@ flowchart LR
 | 051–053 | Partial | Workspace/profile/security contracts without persistence |
 | 054–056 | Blocked | Protected role, audit and integration-test authority unavailable |
 | 057 | Partial | Markup verified; browser/screen-reader review remains |
-| 058–100 | Not started | No completion claim |
+| 058 | Done as safe shell | Buyer dashboard route with honest empty states |
+| 059–060 | Partial | Search URL state exists; detail and persistence pending |
+| 061–062 | Done as safe shells | Saved/alerts routes and Passport shell |
+| 063 | Partial | Timeline copy exists; lifecycle backend pending |
+| 064 | Blocked | Private storage and authenticated documents unavailable |
+| 065 | Done as safe shell | Buyer help route |
+| 066 | Partial | Notification empty state; delivery provider pending |
+| 067 | Blocked | Identity/persistence/admin review unavailable |
+| 068 | Partial | Automated checks pass; browser usability review remains |
+| 069–100 | Not started | No completion claim |
 
 The next bounded implementation is TASK-009: accessible design tokens. The canonical governance branch currently carries the audit commits; feature work must use atomic UI/UX branches and remain reviewable.

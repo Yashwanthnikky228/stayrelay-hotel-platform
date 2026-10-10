@@ -14,4 +14,9 @@ export default [
   route('sign-in', 'pages/AuthPage.tsx', { id: 'sign-in' }),
   route('verify-email', 'pages/AuthPage.tsx', { id: 'verify-email' }),
   route('reset-password', 'pages/AuthPage.tsx', { id: 'reset-password' }),
+  route('buyer', 'pages/BuyerPage.tsx', { id: 'buyer' }),
+  route('buyer/saved', 'pages/BuyerPage.tsx', { id: 'buyer-saved' }),
+  route('buyer/alerts', 'pages/BuyerPage.tsx', { id: 'buyer-alerts' }),
+  route('buyer/help', 'pages/BuyerPage.tsx', { id: 'buyer-help' }),
+  route('account', 'pages/BuyerPage.tsx', { id: 'account' }),
 ] satisfies RouteConfig;
