@@ -74,6 +74,13 @@ flowchart LR
 | 075 | Blocked | Private storage and scanning unavailable |
 | 076–079 | Done as safe shells | Draft/status/handoff/support surfaces |
 | 080 | Partial | Automated checks pass; authenticated mobile journey review remains |
-| 081–100 | Not started | No completion claim |
+| 081–082 | Done as safe shells | Separate operations app and disabled admin login |
+| 083 | Blocked | Server RBAC requires identity authority |
+| 084–085 | Done as safe shells | Overview and review queue routes with no records |
+| 086 | Partial | Eligibility/risk boundary documented; no decisions enabled |
+| 087 | Done as safe shell | Catalogue route |
+| 088–090 | Blocked | Admin sessions, audit storage and server settings unavailable |
+| 091 | Partial | Build/route boundary verified; role tests await identity |
+| 092–100 | Not started | No completion claim |
 
-The next bounded implementation is TASK-009: accessible design tokens. The canonical governance branch currently carries the audit commits; feature work must use atomic UI/UX branches and remain reviewable.
+The next bounded implementation is TASK-092: API contracts and data readiness. The canonical governance branch currently carries the audit commits; feature work must use atomic UI/UX branches and remain reviewable.

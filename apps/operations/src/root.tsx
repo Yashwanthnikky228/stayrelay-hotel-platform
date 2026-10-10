@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { isRouteErrorResponse, Links, Meta, Scripts, ScrollRestoration, useRouteError } from 'react-router';
+import { isRouteErrorResponse, Links, Meta, Scripts, ScrollRestoration, Outlet, useRouteError } from 'react-router';
 import '@stayrelay/ui/styles.css';
 
 export function Layout({ children }: { children: ReactNode }) {
@@ -26,14 +26,7 @@ export default function OperationsRoot() {
       </div>
     </header>
     <main id="main-content" className="mx-auto max-w-operations px-4 py-10 md:px-6">
-      <p className="text-sm font-medium text-brand-700">Privileged workspace</p>
-      <h1 className="mt-3 font-editorial text-4xl">Hotel operations</h1>
-      <p className="mt-4 max-w-2xl leading-7 text-ink-600">Reservation verification, arrival exceptions and financial controls will appear after operator access is established.</p>
-      <section className="mt-8 rounded-card border border-divider bg-surface p-6 md:p-8" aria-labelledby="access-title">
-        <p className="inline-flex rounded-full bg-attention-50 px-3 py-1 text-sm font-medium text-attention-800">Access unavailable</p>
-        <h2 id="access-title" className="mt-4 text-xl font-semibold">Operations console is disabled</h2>
-        <p className="mt-2 max-w-2xl leading-6 text-ink-600">Operator sign-in and permission checks are not connected. No reservation or financial records can be viewed or changed here.</p>
-      </section>
+      <Outlet />
     </main>
   </div>;
 }
