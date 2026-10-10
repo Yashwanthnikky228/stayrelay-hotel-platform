@@ -45,6 +45,7 @@ This register makes each control's status, evidence, accountable role, affected 
 | CTRL-023 | External business authority | Blocked | Founder / Account Owner | Named legal/tax/hotel/payment approvals absent | Complete P02 evidence and signed decisions before affected enablement |
 | CTRL-024 | Production release | Blocked | Release Manager | No reviewed immutable release, full gates, rollback drill or go/no-go | Complete launch dependencies through TASK-1000 and explicit approval |
 | CTRL-025 | Final production certification | Blocked | Release Manager | TASK-1100 not reached | Complete all dependencies with no unresolved P0/P1 and certify exact live state |
+| CTRL-026 | Evidence linkage | Implemented | Technical Program Lead | [Evidence linkage register](EVIDENCE-LINKAGE.md), TASK-0016 | Refresh links and repeat authoritative external reads when source state changes |
 
 ## Maintenance procedure
 
@@ -57,7 +58,7 @@ This register makes each control's status, evidence, accountable role, affected 
 
 ## Current query results
 
-- Repository controls implemented: CTRL-001, 002, 004–006, 008–011, 013–016.
+- Repository controls implemented: CTRL-001, 002, 004–006, 008–011, 013–016, 026.
 - Partially implemented: CTRL-003, 007, 012, 017, 018, 020.
 - Blocked external/release controls: CTRL-019, 021–025.
 - No row currently proves production launch or final certification.
