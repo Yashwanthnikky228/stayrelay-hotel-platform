@@ -49,6 +49,8 @@ Apply the newest explicitly audited or founder-approved source. For current plan
 ### Recorded repository decisions
 
 - [ADR-0001 — Pin the Vite 8.3 baseline](../adr/0001-vite-8-baseline.md) resolves TASK-003 to Vite `8.3.4`, locked and tested with Node `24.19.0`. It resolves only the Vite line; TASK-004 still owns verification of the broader framework/toolchain and provider assumptions.
+- [ADR-0002 — Architecture decision register](../adr/0002-architecture-decision-register.md) records the modular-monolith, trust-chain, risk, payout, AI, provider-adapter, and conditional provider decisions.
+- [ADR-0003 — Foundation runtime and hosting boundaries](../adr/0003-foundation-runtime-and-hosting-boundaries.md) records the tested pnpm/Router workspace and a time-bounded, unverified Vercel preview exception. It authorizes no provider or production action.
 
 ### Audited domain volumes V01–V10
 

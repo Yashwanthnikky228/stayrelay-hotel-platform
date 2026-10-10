@@ -8,7 +8,7 @@ Read Roadmap v3 TASK-007, [canonical source map](SOURCE-OF-TRUTH.md), Technical 
 | --- | --- | --- |
 | Next.js presentation tier | React 19.3, React Router 8 Framework Mode, Vite 8 | Historical alternative. No Next.js application should be added without a new ADR. |
 | Node/Python microservices | Modular TypeScript monolith with owned domain modules | Historical alternative. Do not split pilot commands into independent services by default. |
-| AWS-first hosting stack | Cloudflare edge direction, Supabase Mumbai candidate, Node API/Vercel adapters under a time-limited exception | Historical hosting proposal, not a verified deployed provider state. TASK-078 records the exception and revisit gate. |
+| AWS-first hosting stack | Cloudflare edge direction, Supabase Mumbai candidate, Node API/Vercel adapters under a time-limited exception | Historical hosting proposal, not a verified deployed provider state. [ADR-0003](../adr/0003-foundation-runtime-and-hosting-boundaries.md) records the exception and revisit gate. |
 | Redis inventory locks/session cache | Atomic durable reservation/checkout design remains to be decided after approved DB/provider evidence | Historical implementation suggestion. Do not treat a cache lock as proof of exclusive inventory. |
 | Twilio/Exotel messaging gateway | Provider-neutral notifications boundary, disabled until approved provider/use case and privacy controls | Historical vendor suggestion; no vendor agreement, credentials, or channel capability verified. |
 

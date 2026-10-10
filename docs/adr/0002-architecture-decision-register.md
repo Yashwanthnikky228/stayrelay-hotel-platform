@@ -112,6 +112,8 @@ The following decisions are architecture direction, not permission to transact. 
 
 ## Source record
 
+Implementation foundation: [ADR-0003 — Foundation runtime and hosting boundaries](0003-foundation-runtime-and-hosting-boundaries.md) accepts separate application/build boundaries for local development and records the conditional hosting exception.
+
 - [Roadmap v3 — TASK-005](https://docs.google.com/spreadsheets/d/1YNKI5HK_CFAhP63FGPTPthzTRDddeWg-8IcOLfCTaYs/edit)
 - [Master Control Index](https://docs.google.com/document/d/1A8i7wvG1jRgYUpFaKeXRJEn9gbdWJIwPXcM1RITHS0s/edit)
 - [Audited Engineering Architecture, V08](https://docs.google.com/document/d/1L98Xa90ny-rsfo-tQ3_Rm6TDAYLhgMxyS2h1hyfOHu0/edit)

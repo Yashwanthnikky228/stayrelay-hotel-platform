@@ -1,9 +1,9 @@
 # ADR-0003 — Foundation runtime and hosting boundaries
 
-**Date:** 2026-10-10  
-**Roadmap tasks:** TASK-075, TASK-078  
-**Status:** Accepted for development and preview preparation; provider deployment remains conditional  
-**Supersedes:** The npm/Vite starter assumptions recorded in ADR-0001 where this decision is more specific
+**Date:** 2026-10-10
+**Roadmap tasks:** TASK-075, TASK-078
+**Status:** Accepted for local development and review; provider-hosted preview is conditional and unverified; production is prohibited
+**Supersedes:** Only the npm lock/install language in ADR-0001; its Vite `8.3.4` decision remains in force
 
 ## Context
 
@@ -23,14 +23,17 @@ The current repository contains no database migration head, generated database t
 
 - Use React Router `8.4.0` Framework Mode with `ssr: false` for the customer and operations applications.
 - Build the customer and operations applications as separate static outputs. The operations URL is an application boundary only; server authorization must protect every privileged record and command.
+- Keep the customer application's `/operations` route as disabled public explanatory copy. The privileged console boundary is `apps/operations`.
 - Keep operations records and actions disabled until authenticated roles, ownership evidence, and server enforcement exist.
+
+This clarifies ADR-0002.2: separate applications and build outputs are accepted; provider deployment separation remains conditional.
 
 ### API and hosting boundary
 
 - Keep the Express application as the local API host and share response contracts with the Vercel function adapters.
 - For a future customer preview, the Vercel project root must be the repository root so `api/` functions and `apps/customer/build/client` are available together. Unknown `/api/*` paths must return a typed API `404` before the customer SPA fallback.
 - Treat `apps/operations` as a separate Vercel project only after its project settings, access controls, and permission to include `packages/ui` outside its root are verified.
-- The checked-in Vercel configuration is a temporary preview integration path. It is not the final production runtime decision and authorizes no deployment.
+- The checked-in Vercel configuration is a temporary hosting adapter and exception to the planned Cloudflare edge direction. It is not the final production runtime decision and authorizes no deployment.
 
 ### Target provider gates
 
@@ -40,7 +43,7 @@ The current repository contains no database migration head, generated database t
 
 ## Temporary exception and expiry
 
-The Vercel static applications plus Node function adapters are accepted only to unblock local development and a later approved preview. Revisit or replace this exception before TASK-081 establishes isolated deployment environments and before TASK-098 begins transaction-capable implementation. An accountable architecture review must then either:
+The Vercel static applications plus Node function adapters are accepted only to unblock local development and a later approved preview. Revisit or replace this exception before the earlier of TASK-081 environment establishment or TASK-098 preview/staging deployment. An accountable architecture review must then either:
 
 1. verify this topology against the selected providers and security requirements,
 2. replace it with the approved Cloudflare/API topology, or
@@ -72,7 +75,7 @@ Vercel project settings and deployed routing were not verified. Supabase and Clo
 
 ## Rollback
 
-Revert this ADR and the bounded TASK-075 foundation commits before replacing package, framework, or hosting boundaries. Preserve domain contracts and audited source history. Do not reset provider state because this decision created none.
+Revert the hosting adapter configuration and API catch-all when replacing this topology, while retaining the monorepo, separate applications, domain contracts, and fail-closed states. If a future preview exists, act only against verified provider project and deployment IDs. No external rollback is currently required because this decision created no deployment or provider state.
 
 ## References
 
