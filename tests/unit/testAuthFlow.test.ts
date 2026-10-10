@@ -68,3 +68,30 @@ test('synthetic evidence stays private and fails closed when watermark or scanne
   const otherCookie = other.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(otherCookie);
   assert.equal((await fetch(`${baseUrl}/synthetic-evidence/${clean.evidence.id}/content`, { headers: { cookie: otherCookie } })).status, 404);
 });
+
+test('protected operations decisions publish only a clean, doubly-approved demo listing to buyer search', async () => {
+  const seller = await json('/test-auth/session', { method: 'POST', body: JSON.stringify({ email: 'seller-one@example.test' }) });
+  const sellerCookie = seller.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(sellerCookie);
+  assert.equal((await json('/operations/reviews', { headers: { cookie: sellerCookie } })).response.status, 403);
+
+  const operator = await json('/test-auth/operator-session', { method: 'POST', body: JSON.stringify({ email: 'operator@stayrelay.test' }) });
+  const operatorCookie = operator.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(operatorCookie);
+  const queue = await json('/operations/reviews', { headers: { cookie: operatorCookie } });
+  const review = (queue.body?.reviews as { draft: { id: string }; published: boolean }[])[0]; assert.ok(review); assert.equal(review.published, false);
+  const draftId = review.draft.id;
+
+  const eligibility = await json(`/operations/reviews/${draftId}/eligibility`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ decision: 'approved' }) });
+  assert.equal((eligibility.body?.review as { published: boolean }).published, false);
+  const beforeRisk = await json('/properties?destination=Mumbai&checkIn=2027-01-12&checkOut=2027-01-14&guests=2');
+  assert.deepEqual(beforeRisk.body?.offers, []);
+
+  const risk = await json(`/operations/reviews/${draftId}/risk`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ decision: 'approved' }) });
+  assert.equal((risk.body?.review as { published: boolean }).published, true);
+  const visible = await json('/properties?destination=Mumbai&checkIn=2027-01-12&checkOut=2027-01-14&guests=2');
+  const offers = visible.body?.offers as { isPreview: boolean; property: { inventoryDecision: string } }[];
+  assert.equal(offers.length, 1); assert.equal(offers[0].isPreview, false); assert.equal(offers[0].property.inventoryDecision, 'eligible');
+
+  const rejected = await json(`/operations/reviews/${draftId}/risk`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ decision: 'rejected' }) });
+  assert.equal((rejected.body?.review as { published: boolean }).published, false);
+  assert.deepEqual((await json('/properties?destination=Mumbai&checkIn=2027-01-12&checkOut=2027-01-14&guests=2')).body?.offers, []);
+});

@@ -2,7 +2,7 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import type { SellerReservationDraft, SyntheticAccount, SyntheticEvidenceMetadata } from '@stayrelay/domain';
+import type { DemoReviewDecision, DemoReviewQueueItem, PropertyOffer, PropertySearchFilters, SellerReservationDraft, SyntheticAccount, SyntheticEvidenceMetadata } from '@stayrelay/domain';
 
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
 
@@ -40,7 +40,22 @@ export class TestStore {
       CREATE TABLE IF NOT EXISTS seller_drafts (id TEXT PRIMARY KEY, owner_id TEXT NOT NULL REFERENCES accounts(id), hotel_name TEXT NOT NULL, city TEXT NOT NULL, check_in TEXT NOT NULL, check_out TEXT NOT NULL, guest_count INTEGER NOT NULL, status TEXT NOT NULL CHECK(status = 'draft'), created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS audit_events (id TEXT PRIMARY KEY, actor_id TEXT, action TEXT NOT NULL, target_type TEXT NOT NULL, target_id TEXT NOT NULL, occurred_at TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS synthetic_evidence (id TEXT PRIMARY KEY, draft_id TEXT NOT NULL REFERENCES seller_drafts(id), owner_id TEXT NOT NULL REFERENCES accounts(id), original_filename TEXT NOT NULL, content_type TEXT NOT NULL, byte_size INTEGER NOT NULL, sha256 TEXT NOT NULL, state TEXT NOT NULL CHECK(state IN ('quarantined','simulated_clean')), scan_mode TEXT NOT NULL, storage_key TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS operator_accounts (account_id TEXT PRIMARY KEY REFERENCES accounts(id));
+      CREATE TABLE IF NOT EXISTS demo_reviews (draft_id TEXT PRIMARY KEY REFERENCES seller_drafts(id), eligibility_decision TEXT NOT NULL DEFAULT 'pending', risk_decision TEXT NOT NULL DEFAULT 'pending', eligibility_reviewer_id TEXT, risk_reviewer_id TEXT, updated_at TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS demo_listings (draft_id TEXT PRIMARY KEY REFERENCES seller_drafts(id), published_at TEXT NOT NULL);
     `);
+  }
+
+  ensureOperator(): SyntheticAccount {
+    const existing = this.findAccountByEmail('operator@stayrelay.test');
+    const account = existing ?? this.createAccount('operator@stayrelay.test', 'Demo Operations');
+    if (!account) throw new Error('Could not establish local demo operator.');
+    this.database.prepare('INSERT OR IGNORE INTO operator_accounts (account_id) VALUES (?)').run(account.id);
+    return account;
+  }
+
+  isOperator(accountId: string): boolean {
+    return Boolean(this.database.prepare('SELECT account_id FROM operator_accounts WHERE account_id = ?').get(accountId));
   }
 
   createAccount(email: string, displayName: string): SyntheticAccount | undefined {
@@ -114,6 +129,45 @@ export class TestStore {
     const row = this.database.prepare('SELECT * FROM synthetic_evidence WHERE id = ? AND owner_id = ?').get(evidenceId, ownerId) as EvidenceRow | undefined;
     if (!row) return undefined;
     return { metadata: evidenceFromRow(row), bytes: readFileSync(join(this.storageRoot, row.storage_key)) };
+  }
+
+  listReviewQueue(): DemoReviewQueueItem[] {
+    const drafts = this.database.prepare('SELECT * FROM seller_drafts ORDER BY created_at ASC').all() as unknown as DraftRow[];
+    return drafts.map((row) => {
+      const draft = draftFromRow(row);
+      const review = this.database.prepare('SELECT eligibility_decision, risk_decision FROM demo_reviews WHERE draft_id = ?').get(draft.id) as { eligibility_decision: DemoReviewDecision; risk_decision: DemoReviewDecision } | undefined;
+      const evidenceRows = this.database.prepare('SELECT * FROM synthetic_evidence WHERE draft_id = ? ORDER BY created_at DESC').all(draft.id) as unknown as EvidenceRow[];
+      return { draft, evidence: evidenceRows.map(evidenceFromRow), eligibilityDecision: review?.eligibility_decision ?? 'pending', riskDecision: review?.risk_decision ?? 'pending', published: Boolean(this.database.prepare('SELECT draft_id FROM demo_listings WHERE draft_id = ?').get(draft.id)) };
+    });
+  }
+
+  setReviewDecision(operatorId: string, draftId: string, kind: 'eligibility' | 'risk', decision: DemoReviewDecision): DemoReviewQueueItem | undefined {
+    if (!this.database.prepare('SELECT id FROM seller_drafts WHERE id = ?').get(draftId)) return undefined;
+    this.database.prepare(`INSERT INTO demo_reviews (draft_id, eligibility_decision, risk_decision, updated_at) VALUES (?, 'pending', 'pending', ?) ON CONFLICT(draft_id) DO NOTHING`).run(draftId, now());
+    const column = kind === 'eligibility' ? 'eligibility_decision' : 'risk_decision';
+    const reviewer = kind === 'eligibility' ? 'eligibility_reviewer_id' : 'risk_reviewer_id';
+    this.database.prepare(`UPDATE demo_reviews SET ${column} = ?, ${reviewer} = ?, updated_at = ? WHERE draft_id = ?`).run(decision, operatorId, now(), draftId);
+    this.audit(operatorId, `review.${kind}.${decision}`, 'seller_draft', draftId);
+    const review = this.database.prepare('SELECT eligibility_decision, risk_decision FROM demo_reviews WHERE draft_id = ?').get(draftId) as { eligibility_decision: DemoReviewDecision; risk_decision: DemoReviewDecision };
+    const cleanEvidence = Boolean(this.database.prepare("SELECT id FROM synthetic_evidence WHERE draft_id = ? AND state = 'simulated_clean' LIMIT 1").get(draftId));
+    if (review.eligibility_decision === 'approved' && review.risk_decision === 'approved' && cleanEvidence) {
+      this.database.prepare('INSERT OR IGNORE INTO demo_listings (draft_id, published_at) VALUES (?, ?)').run(draftId, now());
+      this.audit(operatorId, 'demo_listing.published', 'seller_draft', draftId);
+    } else {
+      this.database.prepare('DELETE FROM demo_listings WHERE draft_id = ?').run(draftId);
+    }
+    return this.listReviewQueue().find((item) => item.draft.id === draftId);
+  }
+
+  listPublishedOffers(filters: PropertySearchFilters): PropertyOffer[] {
+    const rows = this.database.prepare('SELECT d.* FROM demo_listings l JOIN seller_drafts d ON d.id = l.draft_id ORDER BY l.published_at DESC').all() as unknown as DraftRow[];
+    return rows.map(draftFromRow).filter((draft) => (!filters.destination || `${draft.hotelName} ${draft.city}`.toLowerCase().includes(filters.destination.toLowerCase())) && draft.checkIn === filters.checkIn && draft.checkOut === filters.checkOut && draft.guestCount >= filters.guests).map((draft) => ({
+      id: `demo-offer-${draft.id}`,
+      isPreview: false as const,
+      guestCapacity: draft.guestCount,
+      buyerTotal: { amountMinor: 1250000, currency: 'INR' as const },
+      property: { id: `demo-property-${draft.id}`, name: draft.hotelName, destination: draft.city, timezone: 'Asia/Kolkata', summary: 'Approved synthetic demonstration listing. No real reservation or transfer.', media: [], amenities: ['Synthetic demonstration'], inventoryDecision: 'eligible' as const, policyReviewedAt: now() },
+    })).filter((offer) => !filters.maxBuyerTotal || offer.buyerTotal.amountMinor <= filters.maxBuyerTotal.amountMinor);
   }
 
   private audit(actorId: string | null, action: string, targetType: string, targetId: string) {

@@ -1,4 +1,4 @@
-import type { SellerReservationDraft, SyntheticAccount } from '@stayrelay/domain';
+import type { SellerReservationDraft, SyntheticAccount, SyntheticEvidenceMetadata } from '@stayrelay/domain';
 
 export class AccountApiError extends Error {
   constructor(message: string, readonly status: number, readonly code?: string) { super(message); }
@@ -19,4 +19,11 @@ export const accountApi = {
   signOut: () => request<void>('/test-auth/session', { method: 'DELETE' }),
   drafts: () => request<{ drafts: SellerReservationDraft[] }>('/seller-drafts'),
   createDraft: (input: Pick<SellerReservationDraft, 'hotelName' | 'city' | 'checkIn' | 'checkOut' | 'guestCount'>) => request<{ draft: SellerReservationDraft }>('/seller-drafts', { method: 'POST', body: JSON.stringify(input) }),
+  evidence: (draftId: string) => request<{ evidence: SyntheticEvidenceMetadata[] }>(`/seller-drafts/${draftId}/evidence`),
+  attachSyntheticFixture: async (draftId: string) => {
+    const response = await fetch(`/api/seller-drafts/${draftId}/evidence`, { method: 'POST', headers: { 'content-type': 'text/plain', 'x-file-name': 'stayrelay-synthetic-reservation.txt' }, body: 'SYNTHETIC TEST DOCUMENT — NOT VALID FOR IDENTIFICATION.\nGenerated StayRelay demonstration reservation evidence. No real guest or booking data.' });
+    const payload = await response.json() as { evidence?: SyntheticEvidenceMetadata; error?: { code?: string; message?: string } };
+    if (!response.ok || !payload.evidence) throw new AccountApiError(payload.error?.message ?? 'Synthetic evidence could not be attached.', response.status, payload.error?.code);
+    return { evidence: payload.evidence };
+  },
 };

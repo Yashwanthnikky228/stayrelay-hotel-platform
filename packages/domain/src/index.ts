@@ -166,6 +166,16 @@ export interface SyntheticEvidenceMetadata {
   createdAt: ISODateTime;
 }
 
+export type DemoReviewDecision = 'pending' | 'approved' | 'rejected';
+
+export interface DemoReviewQueueItem {
+  draft: SellerReservationDraft;
+  evidence: SyntheticEvidenceMetadata[];
+  eligibilityDecision: DemoReviewDecision;
+  riskDecision: DemoReviewDecision;
+  published: boolean;
+}
+
 export type PassportStatus =
   | 'under_review'
   | 'more_information_needed'

@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import type { SellerReservationDraft } from '@stayrelay/domain';
+import type { DemoReviewDecision, PropertySearchFilters, SellerReservationDraft } from '@stayrelay/domain';
 import { sessionTtlSeconds, TestStore } from './testStore';
 
 const cookieName = 'stayrelay_test_session';
@@ -18,16 +18,23 @@ function setSession(response: Response, token: string) {
 }
 
 export function handleTestAccountRoute(request: Request, response: Response, store: TestStore, enabled: boolean): boolean {
-  if (!request.path.startsWith('/test-auth') && request.path !== '/account' && !request.path.startsWith('/seller-drafts') && !request.path.startsWith('/synthetic-evidence')) return false;
+  if (!request.path.startsWith('/test-auth') && request.path !== '/account' && request.path !== '/properties' && !request.path.startsWith('/seller-drafts') && !request.path.startsWith('/synthetic-evidence') && !request.path.startsWith('/operations/')) return false;
   response.setHeader('Cache-Control', 'no-store');
+  if (!enabled && request.path === '/properties') return false;
   if (!enabled) { error(response, 503, 'TEST_AUTH_DISABLED', 'Local synthetic authentication is disabled.'); return true; }
 
   if (request.path === '/test-auth/accounts' && request.method === 'POST') {
     const input = body(request); const email = String(input.email ?? '').trim().toLowerCase(); const displayName = String(input.displayName ?? '').trim();
-    if (!syntheticEmail.test(email) || !/^Demo [A-Za-z][A-Za-z -]{1,38}$/.test(displayName)) { error(response, 400, 'INVALID_SYNTHETIC_ACCOUNT', 'Use a reserved .test email and a display name beginning with Demo.'); return true; }
+    if (!syntheticEmail.test(email) || email === 'operator@stayrelay.test' || !/^Demo [A-Za-z][A-Za-z -]{1,38}$/.test(displayName)) { error(response, 400, 'INVALID_SYNTHETIC_ACCOUNT', 'Use a non-operator reserved .test email and a display name beginning with Demo.'); return true; }
     const account = store.createAccount(email, displayName);
     if (!account) { error(response, 409, 'ACCOUNT_EXISTS', 'That synthetic account already exists. Sign in instead.'); return true; }
     setSession(response, store.createSession(account.id)); response.status(201).json({ account }); return true;
+  }
+
+  if (request.path === '/test-auth/operator-session' && request.method === 'POST') {
+    const email = String(body(request).email ?? '').trim().toLowerCase();
+    if (email !== 'operator@stayrelay.test') { error(response, 401, 'INVALID_OPERATOR_IDENTITY', 'Use the reserved local demo operator identity.'); return true; }
+    const operator = store.ensureOperator(); setSession(response, store.createSession(operator.id)); response.status(200).json({ account: operator }); return true;
   }
 
   if (request.path === '/test-auth/session' && request.method === 'POST') {
@@ -36,12 +43,32 @@ export function handleTestAccountRoute(request: Request, response: Response, sto
     setSession(response, store.createSession(account.id)); response.status(200).json({ account }); return true;
   }
 
+  if (request.path === '/properties' && request.method === 'GET') {
+    const guests = Number(request.query.guests); const checkIn = String(request.query.checkIn ?? ''); const checkOut = String(request.query.checkOut ?? '');
+    if (!isoDate.test(checkIn) || !isoDate.test(checkOut) || !Number.isInteger(guests) || guests < 1 || guests > 6) { error(response, 400, 'INVALID_SEARCH', 'Choose valid dates and one to six guests.'); return true; }
+    const filters: PropertySearchFilters = { destination: String(request.query.destination ?? ''), checkIn, checkOut, guests };
+    if (request.query.maxAmountMinor) filters.maxBuyerTotal = { amountMinor: Number(request.query.maxAmountMinor), currency: request.query.currency === 'USD' ? 'USD' : 'INR' };
+    response.json({ offers: store.listPublishedOffers(filters) }); return true;
+  }
   const token = tokenFrom(request); const account = token ? store.accountForSession(token) : undefined;
   if (request.path === '/test-auth/session' && request.method === 'DELETE') {
     if (token) store.revokeSession(token);
     response.setHeader('Set-Cookie', `${cookieName}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0`); response.status(204).end(); return true;
   }
   if (!account) { error(response, 401, 'AUTHENTICATION_REQUIRED', 'Sign in with a synthetic test account.'); return true; }
+  if (request.path.startsWith('/operations/')) {
+    if (!store.isOperator(account.id)) { error(response, 403, 'OPERATOR_REQUIRED', 'Operator permission is required.'); return true; }
+    if (request.path === '/operations/reviews' && request.method === 'GET') { response.json({ reviews: store.listReviewQueue() }); return true; }
+    const decisionMatch = request.path.match(/^\/operations\/reviews\/([^/]+)\/(eligibility|risk)$/);
+    if (decisionMatch && request.method === 'POST') {
+      const decision = String(body(request).decision) as DemoReviewDecision;
+      if (!['approved', 'rejected'].includes(decision)) { error(response, 400, 'INVALID_REVIEW_DECISION', 'Decision must be approved or rejected.'); return true; }
+      const item = store.setReviewDecision(account.id, decisionMatch[1], decisionMatch[2] as 'eligibility' | 'risk', decision);
+      if (!item) { error(response, 404, 'DRAFT_NOT_FOUND', 'Seller draft not found.'); return true; }
+      response.json({ review: item }); return true;
+    }
+    error(response, 405, 'METHOD_NOT_ALLOWED', 'Method not allowed for this operations route.'); return true;
+  }
   if (request.path === '/account' && request.method === 'GET') { response.json({ account }); return true; }
   if (request.path === '/seller-drafts' && request.method === 'GET') { response.json({ drafts: store.listDrafts(account.id) }); return true; }
   if (request.path === '/seller-drafts' && request.method === 'POST') {

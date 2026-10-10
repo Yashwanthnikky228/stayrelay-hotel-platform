@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { isRouteErrorResponse, Links, Meta, Scripts, ScrollRestoration, useRouteError } from 'react-router';
+import type { DemoReviewDecision, DemoReviewQueueItem } from '@stayrelay/domain';
 import '@stayrelay/ui/styles.css';
 
 export function Layout({ children }: { children: ReactNode }) {
@@ -16,6 +17,27 @@ export function HydrateFallback() {
 }
 
 export default function OperationsRoot() {
+  const [reviews, setReviews] = useState<DemoReviewQueueItem[]>();
+  const [message, setMessage] = useState('Checking protected operator access…');
+  const [available, setAvailable] = useState(true);
+
+  async function loadReviews() {
+    const response = await fetch('/api/operations/reviews', { headers: { Accept: 'application/json' } });
+    if (response.status === 401) { setReviews(undefined); setMessage('Sign in with the reserved local demo operator identity.'); return; }
+    if (!response.ok) { setAvailable(false); setMessage('Operations review is disabled on this hosted demo until managed identity, database and private storage are configured.'); return; }
+    const payload = await response.json() as { reviews: DemoReviewQueueItem[] }; setReviews(payload.reviews); setMessage(`${payload.reviews.length} synthetic submissions in the review queue.`);
+  }
+  useEffect(() => { void loadReviews(); }, []);
+  async function signIn() {
+    const response = await fetch('/api/test-auth/operator-session', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: 'operator@stayrelay.test' }) });
+    if (!response.ok) { setAvailable(false); setMessage('Local demo operator access is unavailable.'); return; }
+    await loadReviews();
+  }
+  async function decide(draftId: string, kind: 'eligibility' | 'risk', decision: Exclude<DemoReviewDecision, 'pending'>) {
+    const response = await fetch(`/api/operations/reviews/${draftId}/${kind}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ decision }) });
+    if (!response.ok) { setMessage('The decision was not saved. No listing state changed.'); return; }
+    await loadReviews();
+  }
   return <div className="min-h-screen bg-canvas text-ink-900">
     <a className="skip-link" href="#main-content">Skip to content</a>
     <header className="border-b border-divider bg-surface">
@@ -28,12 +50,14 @@ export default function OperationsRoot() {
     <main id="main-content" className="mx-auto max-w-operations px-4 py-10 md:px-6">
       <p className="text-sm font-medium text-brand-700">Privileged workspace</p>
       <h1 className="mt-3 font-editorial text-4xl">Hotel operations</h1>
-      <p className="mt-4 max-w-2xl leading-7 text-ink-600">Reservation verification, arrival exceptions and financial controls will appear after operator access is established.</p>
+      <p className="mt-4 max-w-2xl leading-7 text-ink-600">Review synthetic evidence and record eligibility and risk as independent, audited decisions.</p>
       <section className="mt-8 rounded-card border border-divider bg-surface p-6 md:p-8" aria-labelledby="access-title">
-        <p className="inline-flex rounded-full bg-attention-50 px-3 py-1 text-sm font-medium text-attention-800">Access unavailable</p>
-        <h2 id="access-title" className="mt-4 text-xl font-semibold">Operations console is disabled</h2>
-        <p className="mt-2 max-w-2xl leading-6 text-ink-600">Operator sign-in and permission checks are not connected. No reservation or financial records can be viewed or changed here.</p>
+        <p className={`inline-flex rounded-full px-3 py-1 text-sm font-medium ${available ? 'bg-brand-50 text-brand-700' : 'bg-attention-50 text-attention-800'}`}>{available ? 'Protected local demo' : 'Hosted safety lock'}</p>
+        <h2 id="access-title" className="mt-4 text-xl font-semibold">Synthetic reservation review</h2>
+        <p className="mt-2 max-w-2xl leading-6 text-ink-600" role="status">{message}</p>
+        {available && !reviews && <button className="mt-5 min-h-11 rounded-control bg-ink-900 px-5 font-semibold text-white" type="button" onClick={() => void signIn()}>Enter local demo operations</button>}
       </section>
+      {reviews && <section className="mt-6 space-y-4" aria-label="Synthetic review queue">{reviews.length === 0 ? <p className="rounded-card border border-divider bg-surface p-6">No synthetic submissions are waiting.</p> : reviews.map((item) => <article className="rounded-card border border-divider bg-surface p-6" key={item.draft.id}><div className="flex flex-wrap justify-between gap-3"><div><h2 className="text-xl font-semibold">{item.draft.hotelName}</h2><p className="mt-1 text-sm text-ink-600">{item.draft.city} · {item.draft.checkIn} to {item.draft.checkOut}</p></div><span className={`h-fit rounded-full px-3 py-1 text-xs font-semibold ${item.published ? 'bg-brand-50 text-brand-700' : 'bg-attention-50 text-attention-800'}`}>{item.published ? 'Published demo listing' : 'Not published'}</span></div><p className="mt-4 text-sm">Evidence: {item.evidence.length ? item.evidence.map((e) => `${e.originalFilename} (${e.state.replace('_', ' ')})`).join(', ') : 'None — fail closed'}</p><div className="mt-5 grid gap-4 md:grid-cols-2">{(['eligibility','risk'] as const).map((kind) => { const value = kind === 'eligibility' ? item.eligibilityDecision : item.riskDecision; return <div className="rounded-control bg-canvas p-4" key={kind}><p className="text-sm font-semibold capitalize">{kind}: {value}</p><div className="mt-3 flex gap-2"><button className="min-h-10 rounded-control bg-brand-600 px-3 text-sm font-semibold text-white" type="button" onClick={() => void decide(item.draft.id, kind, 'approved')}>Approve</button><button className="min-h-10 rounded-control border border-divider px-3 text-sm font-semibold" type="button" onClick={() => void decide(item.draft.id, kind, 'rejected')}>Reject</button></div></div>; })}</div></article>)}</section>}
     </main>
   </div>;
 }
