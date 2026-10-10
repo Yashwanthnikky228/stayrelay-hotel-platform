@@ -1,6 +1,6 @@
 # StayRelay AI Handoff State
 
-Updated: 2026-10-10. Active chunk: TASK-076.
+Updated: 2026-10-10. Active chunk: TASK-077.
 Repository: `Yashwanthnikky228/stayrelay-hotel-platform`.
 Current content branch/commit are the last row; this handoff is committed separately to avoid a self-referential SHA.
 Default main observed: `d7991ea5add5c01c1cc681f59e2285ab6bfea3ee`; no merge or production action.
@@ -23,6 +23,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | TASK-075F3 | `task-075/hosting-boundaries` | `fb8396e83fcc45fd1057e46b0ce477819f7afe97` | customer/API path boundaries and operations project config | strict typecheck, both builds, 7 unit tests pass; Vercel preview unavailable |
 | TASK-075G | `task-075/foundation-decision` | `ccdd8c8d82d924d6d2ce9030bece744d2d09175a` | accepted development runtime and time-bounded hosting exception | documentation diff/link review; prior foundation checks retained |
 | TASK-076 | `task-076/repository-instructions` | `7ffff5f640c49d4767a819cd71ff4b4c2f86b637` | repository execution, trust, provider, and definition-of-done instructions | manifest/ADR/diff/link review |
+| TASK-077 | `task-077/execution-plans` | `5a98e327e35eb817a96eae6c2946040fce3cb2f4` | living ExecPlan contract and bounded issue flow | instruction/manifest/ADR/diff review |
 | TASK-074C | `task-074/search-state-repair` | `a2d63bd21d1b143c3a30a42898c189c80fae54a4` | search cancellation, stale URL, truthful empty state | strict typecheck/build, 9 unit tests, Chromium empty/invalid state pass |
 | TASK-007 | `task-007/superseded-research` | `2457e4254761a44947673638bdbffdc76ba4004b` | classify older architecture research without deleting provenance | source-path/link inspection and diff check pass |
 
@@ -34,4 +35,4 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 - TASK-006 blocked: no callable Drive/spreadsheet tools for canonical workbook; no parallel register created. TASK-012 accountable owners/signatures are not evidenced.
 - TASK-079/080 require TASK-026 ownership/legal evidence; database/auth/transactions/preview release tasks downstream remain blocked. Features fail closed; fixtures are non-bookable; no valid QR or privileged action exists.
 - Cloud setup instructions must match the final workspace and be saved in a draft; saving does not publish or prove a new environment works.
-- Next: review TASK-076, then execute TASK-077/078 in bounded commits while preserving exact external gates.
+- Next: review TASK-077, then execute TASK-078 without duplicating existing ADR decisions.
