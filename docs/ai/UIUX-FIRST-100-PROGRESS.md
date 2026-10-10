@@ -55,6 +55,12 @@ flowchart LR
 | 040 | Done | Missing/invalid media fallback behavior |
 | 041 | Blocked | Maps key, billing and legal approval unavailable |
 | 042 | Partial | Provider feature remains disabled pending server location contract |
-| 043–100 | Not started | No completion claim |
+| 043 | Blocked | Identity project and approved redirects unavailable |
+| 044–048 | Done/disabled UI | [Authentication readiness](UIUX-FIRST-100-AUTH.md) |
+| 049–050 | Blocked | Server identity/session authority unavailable |
+| 051–053 | Partial | Workspace/profile/security contracts without persistence |
+| 054–056 | Blocked | Protected role, audit and integration-test authority unavailable |
+| 057 | Partial | Markup verified; browser/screen-reader review remains |
+| 058–100 | Not started | No completion claim |
 
 The next bounded implementation is TASK-009: accessible design tokens. The canonical governance branch currently carries the audit commits; feature work must use atomic UI/UX branches and remain reviewable.

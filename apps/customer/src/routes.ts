@@ -10,4 +10,8 @@ export default [
   route('support', 'pages/PublicInfoPage.tsx', { id: 'support' }),
   route('privacy', 'pages/PublicInfoPage.tsx', { id: 'privacy' }),
   route('terms', 'pages/PublicInfoPage.tsx', { id: 'terms' }),
+  route('sign-up', 'pages/AuthPage.tsx', { id: 'sign-up' }),
+  route('sign-in', 'pages/AuthPage.tsx', { id: 'sign-in' }),
+  route('verify-email', 'pages/AuthPage.tsx', { id: 'verify-email' }),
+  route('reset-password', 'pages/AuthPage.tsx', { id: 'reset-password' }),
 ] satisfies RouteConfig;
