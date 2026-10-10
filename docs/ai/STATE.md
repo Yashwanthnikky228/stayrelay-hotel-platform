@@ -1,6 +1,6 @@
 # StayRelay AI Handoff State
 
-Updated: 2026-10-10. Active chunk: TASK-0008.
+Updated: 2026-10-10. Active chunk: TASK-0009.
 Repository: `Yashwanthnikky228/stayrelay-hotel-platform`.
 Current content branch/commit are the last row; this handoff is committed separately to avoid a self-referential SHA.
 Default main observed: `d7991ea5add5c01c1cc681f59e2285ab6bfea3ee`; no merge or production action.
@@ -37,6 +37,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | TASK-0006 | `task-0006/reconcile-artifacts` | `7c6ab63ae0c13a140b330c23a7e14c60cf796796` | canonical-versus-retained reconciliation for workbooks, roadmaps, branches, PR refs, deployments, providers and linked sources | inventory/source comparison, exact hashes/refs, preservation and diff review |
 | TASK-0007 | `task-0007/live-state-baseline` | `bee6ac94f01c584e58395445f1a2ee606cf62da3` | commits, versions, tests, environment boundaries and local customer/operations/API runtime baseline | frozen foundation checks plus local HTTP 200/503/404 contract requests and service shutdown |
 | TASK-0008 | `task-0008/roadmap-crosswalk` | `0c7c869821a33ae615262bbccf1af7c183eaaf5a` | exact 19-phase/1,100-task ranges and historical evidence mapping without identifier collision | workbook ID/dependency/workstream comparison, branch inventory and diff review |
+| TASK-0009 | `task-0009/completion-evidence` | `8d30f0f7e3ec5bf587288ecf6ac9c69a8fd5f02a` | universal and task-class completion evidence, real command policy and fail-closed proof | typecheck, both builds, 9 unit tests, link/path and diff review |
 
 ## Persistent controls and blockers
 
@@ -51,4 +52,5 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 - TASK-0006 reconciles canonical and retained artifacts without deleting provenance: the active repository workbook controls current status, the uploaded workbook remains the original input, and older-roadmap branches remain historical evidence requiring explicit remapping.
 - TASK-0007 verifies the branch-local customer, operations and API foundation while keeping preview, provider and production states explicitly unverified. The pnpm runtime is 11.25.0 while the manifest pins 11.19.0; the frozen lock remains unchanged.
 - TASK-0008 maps every current phase/range and retained historical branch group. Historical task numbers remain evidence labels only and require current-row revalidation.
-- Next: review TASK-0008, then execute dependency-ready TASK-0009 completion-evidence definition.
+- TASK-0009 defines completion evidence and records `pnpm test:unit` as the current real test command; the pasted blueprint's `pnpm test` instruction is not executable at this commit.
+- Next: review TASK-0009, then execute dependency-ready TASK-0010 project-control risk register.
