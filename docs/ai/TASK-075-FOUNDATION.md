@@ -61,3 +61,9 @@ Branch `task-075/api-contract-tests`; base075F1 handoff. Read shared API replies
 ## 075F3 — Static customer build and API path boundary
 
 Branch `task-075/hosting-boundaries`; base075F2 handoff. Read Vercel routing-utils filesystem/rewrite order, current root config, API adapters and separate app outputs. Five hand-edited files: root/ops Vercel configs, typed unknown-API function, API README, focused adapter assertion. Root Vercel project must have Root Directory `.` so root API functions/config and apps/customer output are in one project. Filesystem functions win before high-level rewrites; unknown `/api/*` is sent to a typed404 function before the customer SPA fallback. Ops project has Root Directory `apps/operations`, `build/client` output and only `/` route. Separate deployment and monorepo outside-root source access require verification. No project setting/deployment changed. Acceptance: both builds, strict typecheck, seven unit tests, JSON config/path review. Vercel preview routing is not yet verified.
+
+## 075G — Foundation decision and exception gate
+
+Branch `task-075/foundation-decision`; base is the TASK-007 handoff that already contains all TASK-075 foundation slices. Read the tested workspace manifests, hosting configurations, ADR-0002, provider gates, and preceding TASK-075 evidence. Record the accepted development runtime and app boundaries in [ADR-0003](../adr/0003-foundation-runtime-and-hosting-boundaries.md).
+
+The Vercel static-app and Node-function path is a temporary preview integration boundary. It must be revisited before TASK-081 isolated environments and before TASK-098 transaction-capable implementation. Supabase Mumbai, Cloudflare edge/compute, Vercel projects, production deployment, schema, auth, inventory, and privileged operations remain conditional or disabled. Rollback is a bounded Git revert; this slice creates no provider state.
