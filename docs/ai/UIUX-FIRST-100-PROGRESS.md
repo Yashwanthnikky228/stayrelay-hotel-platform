@@ -43,6 +43,10 @@ flowchart LR
 | 014 | Done | Responsive AppShell navigation and safe `/admin/login` landing |
 | 015 | Blocked | Browser visual regression tooling/screenshots are not available in this environment |
 | 016–018 | Done | Marketplace shell, destination context label, and explicit Find/Sell mode UI; sell submission remains draft-only |
-| 019–100 | Not started | No completion claim |
+| 019–021 | Partial/blocked | [Discovery readiness](UIUX-FIRST-100-DISCOVERY.md); provider and server radius contract unavailable |
+| 022–023 | Done | Existing exact-date/guest controls and destination context banner |
+| 024 | Partial | Results states exist; map/sort/pagination remain |
+| 025 | Blocked | Verified structured inventory fields unavailable |
+| 026–100 | Not started | No completion claim |
 
 The next bounded implementation is TASK-009: accessible design tokens. The canonical governance branch currently carries the audit commits; feature work must use atomic UI/UX branches and remain reviewable.
