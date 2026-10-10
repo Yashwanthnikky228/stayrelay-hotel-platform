@@ -1,6 +1,6 @@
 # StayRelay Canonical Planning Sources
 
-**Purpose:** TASK-002 source-of-truth and planning-set record  
+**Purpose:** Canonical planning-source link register; TASK-0002 hierarchy record
 **Recorded:** 2026-10-09  
 **Repository:** https://github.com/Yashwanthnikky228/stayrelay-hotel-platform  
 **Baseline:** `task-001/repository-baseline` at `085f2944c5a0e519ee4b92b2be923d14eeb891c7`  
@@ -9,6 +9,8 @@
 The 1,100-task controller supersedes the earlier 180-task roadmap for future task IDs, dependencies, and status. Existing 180-task branches and records remain historical implementation evidence and are not renumbered. TASK-0002 owns the detailed source-map reconciliation.
 
 This file links the sources that govern repository work. It does not copy the dossier into Git, approve unapproved business decisions, or turn planning documents into evidence of production behavior or external authorization. Re-read the relevant source sections for every task.
+
+Use the [TASK-0002 canonical source hierarchy](../project-control/SOURCE-HIERARCHY.md) to resolve precedence and distinguish intended behavior, implemented repository evidence, exact server/provider state, official external facts, and historical material.
 
 ## Authority and conflict handling
 
