@@ -1,6 +1,6 @@
 # StayRelay AI Handoff State
 
-Updated: 2026-10-10. Active chunk: TASK-0005.
+Updated: 2026-10-10. Active chunk: TASK-0006.
 Repository: `Yashwanthnikky228/stayrelay-hotel-platform`.
 Current content branch/commit are the last row; this handoff is committed separately to avoid a self-referential SHA.
 Default main observed: `d7991ea5add5c01c1cc681f59e2285ab6bfea3ee`; no merge or production action.
@@ -34,6 +34,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | TASK-0003 | `task-0003/accountable-owners` | `8550fa85d412d0aac27ee1d32256eb28d7a6b819` | single-role accountability matrix for artifact and decision classes | workbook dependency, charter/provider coverage, ownership and diff review |
 | TASK-0004 | `task-0004/decision-rights` | `5d8fd36ca5fb19fdb3f8088f31d6c12e7a9b9a22` | approval, consultation, blocking, escalation and emergency decision rights | workbook dependency, charter/ownership coverage and diff review |
 | TASK-0005 | `task-0005/artifact-inventory` | `929113eb9c500d4ef161708684cdd2e00013f1bd` | repository, branch, PR-ref, deployment-config, workbook, planning-source and provider-project inventory | native Git refs, repository/config inspection, workbook hashes/status, environment-name and diff review |
+| TASK-0006 | `task-0006/reconcile-artifacts` | `7c6ab63ae0c13a140b330c23a7e14c60cf796796` | canonical-versus-retained reconciliation for workbooks, roadmaps, branches, PR refs, deployments, providers and linked sources | inventory/source comparison, exact hashes/refs, preservation and diff review |
 
 ## Persistent controls and blockers
 
@@ -45,4 +46,5 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 - TASK-079/080 require TASK-026 ownership/legal evidence; database/auth/transactions/preview release tasks downstream remain blocked. Features fail closed; fixtures are non-bookable; no valid QR or privileged action exists.
 - The active cloud configuration contains the tested install/start instructions and currently has no pending draft. This reconnected instance passed frozen pnpm install, strict typecheck, both framework builds, and all 9 unit tests; local customer `/`, customer `/passport`, operations `/`, and API health returned `200`, while inventory correctly returned `503 INVENTORY_NOT_CONFIGURED`. The saved checkout ref remains `main`; pushed feature branches still require review and merge before a fresh main checkout includes them.
 - GitHub API and public REST remain `Forbidden`; native Git exposes PR refs 1–5 but not current titles, reviews, CI, mergeability or deployment state. TASK-0005 records all 33 origin task branches, both workbook versions, hosting configuration and provider-project gaps without promoting configuration to live evidence.
-- Next: review TASK-0005, then execute dependency-ready TASK-0006 duplicate and stale-copy reconciliation. Preserve both workbook histories and the earlier-roadmap branch evidence.
+- TASK-0006 reconciles canonical and retained artifacts without deleting provenance: the active repository workbook controls current status, the uploaded workbook remains the original input, and older-roadmap branches remain historical evidence requiring explicit remapping.
+- Next: review TASK-0006, then execute dependency-ready TASK-0007 live-state baseline with local, branch, main, preview, provider and production facts kept separate.
