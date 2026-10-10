@@ -5,6 +5,7 @@ import { EconomicsBreakdown } from '../components/marketplace/EconomicsBreakdown
 import { PropertyCard } from '../components/marketplace/PropertyCard';
 import { SearchFilters, type MarketplaceSearchValues } from '../components/marketplace/SearchFilters';
 import { previewOffers } from '../data/previewOffers';
+import { resolveDestination } from '../data/destinations';
 import { ApiError, searchPropertyOffers } from '../services/marketplace';
 
 const initialValues: MarketplaceSearchValues = {
@@ -204,15 +205,17 @@ export function MarketplacePage() {
 
   const showingPreview = serverOffers === null;
   const resultHeading = showingPreview ? 'Example property cards' : 'Eligible stays';
+  const destinationContext = resolveDestination(filters.destination);
 
   return (
     <div className="space-y-8 md:space-y-10">
-      <section className="relative overflow-hidden rounded-signature bg-ink-900 px-6 py-8 text-white md:px-10 md:py-11">
+      <section className={`relative overflow-hidden rounded-signature bg-gradient-to-br px-6 py-8 text-white transition-colors md:px-10 md:py-11 ${destinationContext?.heroClass ?? 'from-ink-900 via-[#172c48] to-[#31445a]'}`}>
         <div aria-hidden="true" className="absolute -right-20 -top-28 h-80 w-80 rounded-full border border-white/10" />
         <div aria-hidden="true" className="absolute -right-7 -top-14 h-56 w-56 rounded-full border border-white/10" />
-        <p className="relative text-sm font-medium text-brand-50">StayRelay · quiet hospitality, precise transactions</p>
-        <h1 className="relative mt-3 max-w-3xl font-editorial text-4xl leading-tight md:text-6xl">Find a stay. Know what happens next.</h1>
-        <p className="relative mt-4 max-w-2xl leading-7 text-divider">Search exact dates and review the total price. Only reservations with a confirmed, authorised transfer route can appear as eligible stays.</p>
+        <p className="relative text-sm font-medium text-brand-50">{destinationContext ? `${destinationContext.label} · ${destinationContext.region}` : 'StayRelay · quiet hospitality, precise transactions'}</p>
+        <h1 className="relative mt-3 max-w-3xl font-editorial text-4xl leading-tight md:text-6xl">{destinationContext ? `Discover ${destinationContext.label}. Know what happens next.` : 'Find a stay. Know what happens next.'}</h1>
+        <p className="relative mt-4 max-w-2xl leading-7 text-divider">{destinationContext?.description ?? 'Search exact dates and review the total price. Only reservations with a confirmed, authorised transfer route can appear as eligible stays.'}</p>
+        {destinationContext && <p className="relative mt-5 inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold">Synthetic destination context · inventory remains unconnected</p>}
       </section>
 
       <SearchFilters

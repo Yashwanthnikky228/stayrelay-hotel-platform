@@ -1,4 +1,5 @@
 import { useEffect, useRef, type FormEvent, type RefObject } from 'react';
+import { destinationContexts } from '../../data/destinations';
 
 export interface MarketplaceSearchValues {
   destination: string;
@@ -36,7 +37,10 @@ export function SearchFilters({ value, formRef, isSearching, errorMessage, onCha
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         <label className="field-label xl:col-span-2">
           Destination
-          <input className={controlClass} name="destination" placeholder="City or area" autoComplete="off" value={value.destination} onChange={(event) => update('destination', event.currentTarget.value)} />
+          <input className={controlClass} name="destination" placeholder="City or area" autoComplete="off" list="stayrelay-destinations" value={value.destination} onChange={(event) => update('destination', event.currentTarget.value)} />
+          <datalist id="stayrelay-destinations">
+            {destinationContexts.map(({ id, label, region }) => <option key={id} value={label}>{region}</option>)}
+          </datalist>
         </label>
         <label className="field-label">
           Check in
