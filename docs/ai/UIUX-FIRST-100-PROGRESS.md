@@ -47,6 +47,8 @@ flowchart LR
 | 022–023 | Done | Existing exact-date/guest controls and destination context banner |
 | 024 | Partial | Results states exist; map/sort/pagination remain |
 | 025 | Blocked | Verified structured inventory fields unavailable |
-| 026–100 | Not started | No completion claim |
+| 026–031 | Partial/blocked | Result cards exist; policy filters, maps, PostGIS, property detail, request-stay and save-search persistence remain |
+| 032 | Done | Public How It Works, Safety, Support, Privacy and Terms placeholder routes |
+| 033–100 | Not started | No completion claim |
 
 The next bounded implementation is TASK-009: accessible design tokens. The canonical governance branch currently carries the audit commits; feature work must use atomic UI/UX branches and remain reviewable.

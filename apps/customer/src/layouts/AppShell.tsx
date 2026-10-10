@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router';
 const navigation = [
   { to: '/', label: 'Find a stay', end: true },
   { to: '/#how-it-works', label: 'How it works' },
+  { to: '/support', label: 'Help' },
   { to: '/passport', label: 'Reservation Passport' },
 ];
 
