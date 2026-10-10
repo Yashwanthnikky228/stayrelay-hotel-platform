@@ -5,6 +5,7 @@ Owner: Engineering Lead; security/privacy review unassigned
 Repository: Yashwanthnikky228/stayrelay-hotel-platform
 Branch: task/sr-operations-publication-flow
 Base commit: d50eec143cc2f812c27527262aa25344a52aeebe
+Content commit: 83a930b
 Provider/environment mode: isolated local synthetic development; hosted backends disabled
 Migration head: local development schema embedded in `TestStore`; no hosted migration
 Last updated: 2026-10-11 01:30 IST

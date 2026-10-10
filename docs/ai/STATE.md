@@ -51,7 +51,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | SR location/navigation | `task/sr-location-responsive-navigation` | `98ae6f9` | exact-match synthetic destination context and responsive customer navigation | typecheck, both builds, 11 unit tests, Chromium 390px and desktop navigation pass |
 | SR local auth/drafts | `task/sr-test-auth-persistent-drafts` | `847db21` | local-only synthetic accounts, opaque HttpOnly sessions, SQLite seller drafts, buyer/seller workspace and owner isolation | typecheck, both builds, 13 unit/API tests, Chromium persistence/isolation/sign-out journey pass |
 | SR private evidence | `task/sr-private-synthetic-evidence` | `045ae47` | owner-only local synthetic evidence storage with watermark enforcement, quarantine and simulated scanning | typecheck, both builds, 14 unit/API tests including clean download, scanner failure and cross-account denial |
-| SR operations/publication | `task/sr-operations-publication-flow` | pending | generated seller fixture, operator-only review, separate eligibility/risk decisions, fail-closed demo publication and buyer visibility | typecheck, both builds, 15 unit/API tests; Chromium desktop seller/operations and 390px buyer journey pass |
+| SR operations/publication | `task/sr-operations-publication-flow` | `83a930b` | generated seller fixture, operator-only review, separate eligibility/risk decisions, fail-closed demo publication and buyer visibility | typecheck, both builds, 15 unit/API tests; Chromium desktop seller/operations and 390px buyer journey pass |
 
 ## Persistent controls and blockers
 
