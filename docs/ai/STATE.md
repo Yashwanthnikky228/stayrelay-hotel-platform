@@ -1,6 +1,6 @@
 # StayRelay AI Handoff State
 
-Updated: 2026-10-10. Active chunk: TASK-0016.
+Updated: 2026-10-10. Active chunk: TASK-0016–TASK-0050 reconciliation.
 Repository: `Yashwanthnikky228/stayrelay-hotel-platform`.
 Current content branch/commit are the last row; this handoff is committed separately to avoid a self-referential SHA.
 Default main observed: `c2e337e4a083ceac61e890c4c02d6d7865c9edf6`; no merge or production action.
@@ -45,7 +45,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | TASK-0014 | `task-0014/working-templates` | `73a6d9d662e269fba08fd9a6b521f2f51f5b741a` | task, ADR, incident and handoff templates capturing sources, invariants, tests and continuation state | template field/coverage review, typecheck, both builds, 9 unit tests |
 | TASK-0015 | `task-0015/control-register` | `a79ce602ea422858421f6ad5a4cb4b182daad508` | 25 queryable project controls with status, evidence, accountable role and next action | register schema/status/source reconciliation, typecheck, both builds, 9 unit tests |
 | TASK-0016 | `task-0016/evidence-linkage` | `ff855cda215f452d763b1292c46ebd347dedf170` | durable repository links and external-authority classification for completed project controls | 30 path checks, 15 commit ancestry checks, remote Git ref reads, document link/diff review |
-| TASK-0017–TASK-0025 | `task-0016/evidence-linkage` | `744d62be458a25523c6e727754228729b23a0357` | governance continuation: open questions, data/security review, access boundaries, traceability, rollback, review map and runbook | document link/diff review; TASK-0023 and TASK-0025 explicitly blocked by unresolved external authority |
+| TASK-0017–TASK-0025 | `task-0016/evidence-linkage` | `744d62be458a25523c6e727754228729b23a0357` | governance continuation: open questions, data/security review, access boundaries, traceability, rollback, review map and runbook | document link/diff review; TASK-0023–TASK-0025 blocked because the runbook artifact cannot bypass TASK-0023 |
 | TASK-0026–TASK-0050 | `task-0016/evidence-linkage` | `c42ec7f0adc6f18198d9114c3b6e2f145982432e` | repository and deployment baseline mapped to existing controls and current remote state | baseline/link/diff review; TASK-0045–TASK-0050 blocked at hosted or approval gates |
 
 ## Persistent controls and blockers
@@ -70,6 +70,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 - The current remote `main` contains the customer, operations and API workspaces. The user handoff identifies customer deployment `dpl_7sUV3h6XqR1hmZ7u4Aaajdpp5mZS` and operations deployment `dpl_85XV8nEBF8pMpFnGKPLP35jdDeYt` as READY from `c2e337e4...`; these are retained as user-supplied evidence pending an authenticated Vercel read.
 - TASK-0015 records 13 implemented, 6 partial and 6 blocked controls. Repository control status remains distinct from human acceptance, hosted enforcement, merge, deployment and production certification.
 - TASK-0016 links every completed canonical task through TASK-0015 to 30 durable repository artifacts and 15 ancestor commits. Remote Git state is server-confirmed; unavailable external reads remain explicitly below server-verified status.
-- TASK-0017 through TASK-0022 and TASK-0024 now have repository evidence. TASK-0023 remains blocked by unresolved legal, provider, hosted-state, retention and release-approval gaps; TASK-0025 therefore remains blocked and is not a production authorization.
+- TASK-0017 through TASK-0022 are complete. TASK-0024 has a repository runbook artifact but is blocked because required predecessor TASK-0023 remains blocked by unresolved legal, provider, hosted-state, retention and release-approval gaps. TASK-0025 therefore remains blocked and is not a production authorization.
 - TASK-0026 through TASK-0044 now map the repository/deployment baseline to durable controls. TASK-0045 through TASK-0050 remain blocked because launch-gate acceptance needs hosted checks, provider authority, multidisciplinary signoff and approval.
-- Next: review the baseline, then continue with the next dependency-ready workstream while preserving the blocked gates.
+- Reconciliation accepts the canonical documentation history through `d705732` and excludes later UI bulk commits pending a task-by-task audit; see `TASK-0016-0050-RECONCILIATION.md`.
+- Next canonical task is TASK-0051, but it depends on blocked TASK-0050. TASK-0076 shares that dependency. Continue only with an independently dependency-ready row or after the named external gates are evidenced.
