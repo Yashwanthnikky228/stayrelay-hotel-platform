@@ -50,6 +50,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | SR discovery slice | `task/sr-visible-discovery-slice` | `a70b99a891f1bac24c21619f278b76f168dc6f92` | synthetic homepage search to property detail with preserved URL state and disabled checkout | typecheck, both builds, 9 unit tests, Chromium navigation and screenshot pass |
 | SR location/navigation | `task/sr-location-responsive-navigation` | `98ae6f9` | exact-match synthetic destination context and responsive customer navigation | typecheck, both builds, 11 unit tests, Chromium 390px and desktop navigation pass |
 | SR local auth/drafts | `task/sr-test-auth-persistent-drafts` | `847db21` | local-only synthetic accounts, opaque HttpOnly sessions, SQLite seller drafts, buyer/seller workspace and owner isolation | typecheck, both builds, 13 unit/API tests, Chromium persistence/isolation/sign-out journey pass |
+| SR private evidence | `task/sr-private-synthetic-evidence` | `045ae47` | owner-only local synthetic evidence storage with watermark enforcement, quarantine and simulated scanning | typecheck, both builds, 14 unit/API tests including clean download, scanner failure and cross-account denial |
 
 ## Persistent controls and blockers
 
@@ -80,4 +81,6 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 - Synthetic discovery implementation now includes a dedicated fictional property-detail route, preserved search state, exact-match Mumbai/Hyderabad/Bengaluru context, and responsive navigation. Live inventory, checkout, identity collection and money movement remain disabled.
 - Local synthetic authentication is enabled only with `STAYRELAY_TEST_AUTH=enabled`. It accepts reserved `.test` accounts, stores session-token digests and private drafts in the explicit local SQLite database, and denies cross-account or revoked-session access. This is locally tested behavior, not hosted identity, Supabase, RLS, backup or production evidence.
 - The next connected synthetic milestone is owner-only evidence upload with quarantine/scanner simulation. Real identity-document collection remains disabled.
+- The local API now stores bounded text/PDF synthetic evidence outside the public tree under server-generated names. Missing watermark or simulated scanner unavailability remains quarantined; only simulated-clean content is downloadable by its owning account. Hosted storage, real malware scanning, retention approval and real-document collection remain disabled.
+- Next synthetic milestone: seller evidence-upload UI, then the separately protected operations review queue.
 - Next canonical task is TASK-0051, but it depends on blocked TASK-0050. TASK-0076 shares that dependency. Continue only with an independently dependency-ready row or after the named external gates are evidenced.
