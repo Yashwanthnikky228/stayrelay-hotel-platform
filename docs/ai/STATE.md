@@ -1,9 +1,9 @@
 # StayRelay AI Handoff State
 
-Updated: 2026-10-10. Active chunk: TASK-0015.
+Updated: 2026-10-10. Active chunk: TASK-0016.
 Repository: `Yashwanthnikky228/stayrelay-hotel-platform`.
 Current content branch/commit are the last row; this handoff is committed separately to avoid a self-referential SHA.
-Default main observed: `d7991ea5add5c01c1cc681f59e2285ab6bfea3ee`; no merge or production action.
+Default main observed: `c2e337e4a083ceac61e890c4c02d6d7865c9edf6`; authorized fast-forward and two exact Vercel production deployments are recorded below without implying launch certification.
 
 Execution controller: `docs/project-control/StayRelay_Exact_1100_Task_Production_Tracker.xlsx`. TASK-0001 through TASK-1100 now control future IDs, dependencies, and status. Earlier task rows below remain historical implementation evidence.
 
@@ -44,6 +44,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | TASK-0013 | `task-0013/change-control` | `62d8b6ec03ea1dacde8f52dc2537a16153387083` | standard, controlled, production and emergency change procedure with approval and rollback paths | control-source reconciliation, Vercel negative authorization reads, typecheck, both builds, 9 unit tests |
 | TASK-0014 | `task-0014/working-templates` | `73a6d9d662e269fba08fd9a6b521f2f51f5b741a` | task, ADR, incident and handoff templates capturing sources, invariants, tests and continuation state | template field/coverage review, typecheck, both builds, 9 unit tests |
 | TASK-0015 | `task-0015/control-register` | `a79ce602ea422858421f6ad5a4cb4b182daad508` | 25 queryable project controls with status, evidence, accountable role and next action | register schema/status/source reconciliation, typecheck, both builds, 9 unit tests |
+| TASK-0016 | `task-0016/evidence-linkage` | `f24766d0dd25095d6c3a4a18aca07491fd0f7a17` | durable artifact/evidence/commit linkage for every completed canonical row plus exact Git/Vercel reads | 30 path, 15 commit and 32 Markdown-link checks; typecheck, both builds, 9 unit tests |
 
 ## Persistent controls and blockers
 
@@ -53,7 +54,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 - Schema/migration head: none. Generated DB types: none. Provider identities/modes/deployment settings: unverified; no changes made. The active session exposed no callable OpenAI Platform, Supabase, or HubSpot methods; see `PROVIDER-INTEGRATION-INVENTORY.md`.
 - TASK-006 blocked: no callable Drive/spreadsheet tools for canonical workbook; no parallel register created. TASK-012 accountable owners/signatures are not evidenced.
 - TASK-079/080 require TASK-026 ownership/legal evidence; database/auth/transactions/preview release tasks downstream remain blocked. Features fail closed; fixtures are non-bookable; no valid QR or privileged action exists.
-- The active cloud configuration contains the tested install/start instructions and currently has no pending draft. This reconnected instance passed frozen pnpm install, strict typecheck, both framework builds, and all 9 unit tests; local customer `/`, customer `/passport`, operations `/`, and API health returned `200`, while inventory correctly returned `503 INVENTORY_NOT_CONFIGURED`. The saved checkout ref remains `main`; pushed feature branches still require review and merge before a fresh main checkout includes them.
+- The active cloud configuration contains tested pnpm install/start instructions. A newer draft adds the correct operations project ID, `*.vercel.app` live-smoke access and deployment verification guidance; it requires user publication/restart. Current strict typecheck, both builds and all 9 unit tests pass.
 - GitHub API and public REST remain `Forbidden`; native Git exposes PR refs 1–5 but not current titles, reviews, CI, mergeability or deployment state. TASK-0005 records all 33 origin task branches, both workbook versions, hosting configuration and provider-project gaps without promoting configuration to live evidence.
 - TASK-0006 reconciles canonical and retained artifacts without deleting provenance: the active repository workbook controls current status, the uploaded workbook remains the original input, and older-roadmap branches remain historical evidence requiring explicit remapping.
 - TASK-0007 verifies the branch-local customer, operations and API foundation while keeping preview, provider and production states explicitly unverified. The pnpm runtime is 11.25.0 while the manifest pins 11.19.0; the frozen lock remains unchanged.
@@ -61,9 +62,10 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 - TASK-0009 defines completion evidence and records `pnpm test:unit` as the current real test command; the pasted blueprint's `pnpm test` instruction is not executable at this commit.
 - TASK-0010 records 19 open risks; no external, privileged, money, real-evidence, preview or production risk is treated as resolved.
 - TASK-0011 verifies 1,100 nodes and 1,122 resolved edges with no cycle. TASK-0011 and TASK-0026 were the two dependency-ready rows at analysis time; production/provider/review gates remain separate from dependency readiness.
-- TASK-0012 separates task completion from PR review, merge, preview, staging and production promotion. Hosted enforcement remains blocked by missing Vercel identity/link/deployment evidence and unavailable GitHub API review/CI evidence.
-- TASK-0013 defines change intake, classification, implementation, review, promotion, emergency and rollback controls. Current Vercel identity returned `404 User not found`; configured team and both project reads returned `403 Not authorized`, so deployment remains blocked.
+- TASK-0012 separates task completion from PR review, merge, preview, staging and production promotion. Exact Vercel projects/deployments are now verified; GitHub API review/CI evidence and hosted HTTP smoke checks remain unavailable.
+- TASK-0013 defines change intake, classification, implementation, review, promotion, emergency and rollback controls. Its failed Vercel authorization reads are historical; current authenticated reads succeed as recorded by TASK-0016.
 - TASK-0014 provides working task, ADR, incident and handoff templates. Templates structure evidence but do not manufacture approvals, provider state, tests or deployment results.
-- The Vercel customer project exists on `main`, while `apps/operations` is absent from `main`; operations-project creation remains blocked pending reviewed integration. Do not point it at `apps/api` or the customer project.
+- GitHub `main`, the repository-root customer/API project and the separate `apps/operations` project were verified at `c2e337e4a083ceac61e890c4c02d6d7865c9edf6`. Deployments `dpl_7sUV3h6XqR1hmZ7u4Aaajdpp5mZS` and `dpl_85XV8nEBF8pMpFnGKPLP35jdDeYt` are `READY`; direct hosted HTTP smoke remains pending.
 - TASK-0015 records 13 implemented, 6 partial and 6 blocked controls. Repository control status remains distinct from human acceptance, hosted enforcement, merge, deployment and production certification.
-- Next: review TASK-0015, then execute dependency-ready TASK-0016 repository/external evidence linkage or the independent TASK-0026 root on its own branch.
+- TASK-0016 links all 15 prior completed rows to 30 existing repository evidence files and 15 resolvable commits, while preserving external source/provider/approval gaps.
+- Next: review TASK-0016, then execute dependency-ready TASK-0017 open-question register or the independent TASK-0026 root on its own branch.
