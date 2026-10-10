@@ -49,6 +49,12 @@ flowchart LR
 | 025 | Blocked | Verified structured inventory fields unavailable |
 | 026–031 | Partial/blocked | Result cards exist; policy filters, maps, PostGIS, property detail, request-stay and save-search persistence remain |
 | 032 | Done | Public How It Works, Safety, Support, Privacy and Terms placeholder routes |
-| 033–100 | Not started | No completion claim |
+| 033–037 | Partial | [Media and map readiness](UIUX-FIRST-100-MEDIA-MAPS.md); source/rights audit remains |
+| 038 | Done | Responsive media component with dimensions, alt text and fallback |
+| 039 | Blocked | Protected admin/storage authority unavailable |
+| 040 | Done | Missing/invalid media fallback behavior |
+| 041 | Blocked | Maps key, billing and legal approval unavailable |
+| 042 | Partial | Provider feature remains disabled pending server location contract |
+| 043–100 | Not started | No completion claim |
 
 The next bounded implementation is TASK-009: accessible design tokens. The canonical governance branch currently carries the audit commits; feature work must use atomic UI/UX branches and remain reviewable.

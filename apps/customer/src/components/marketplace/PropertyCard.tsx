@@ -1,5 +1,6 @@
 import type { MarketplaceOffer } from '@stayrelay/domain';
 import { formatMoney } from './formatMoney';
+import { ResponsiveImage } from '../ResponsiveImage';
 
 interface PropertyCardProps {
   offer: MarketplaceOffer;
@@ -19,7 +20,7 @@ export function PropertyCard({ offer, selected, onSelect }: PropertyCardProps) {
         onClick={() => onSelect(offer)}
       >
         <div className="relative flex aspect-[4/3] items-end overflow-hidden bg-gradient-to-br from-brand-50 via-canvas to-divider p-5">
-          {cover && <img className="absolute inset-0 h-full w-full object-cover" src={cover.url} alt={cover.alt} loading="lazy" decoding="async" />}
+          {cover && <ResponsiveImage className="absolute inset-0 h-full w-full" src={cover.url} alt={cover.alt} sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw" />}
           <span className="rounded-full border border-white/70 bg-white/90 px-3 py-1 text-xs font-semibold text-ink-900">{offer.isPreview ? 'Illustrative sample · Not bookable' : 'Eligible for transfer'}</span>
           <span className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full border border-white/80 bg-white/90 text-sm font-semibold text-ink-900" aria-hidden="true">{selected ? '✓' : '＋'}</span>
         </div>
