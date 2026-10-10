@@ -2,6 +2,7 @@ import { NavLink, Outlet } from 'react-router';
 
 const navigation = [
   { to: '/', label: 'Find a stay', end: true },
+  { to: '/account', label: 'Account' },
   { to: '/passport', label: 'Reservation Passport' },
   { to: '/operations', label: 'Admin access' },
 ];
