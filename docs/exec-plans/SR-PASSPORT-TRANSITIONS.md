@@ -3,6 +3,7 @@
 Status: Review
 Branch: task/sr-passport-transitions
 Base commit: b501ff44efb8cbe062e77d8e35c9ae5c7346f280
+Content commit: 0df8af0
 Provider mode: isolated synthetic development; no payment, reservation transfer or hotel integration
 Last updated: 2026-10-11 05:05 IST
 

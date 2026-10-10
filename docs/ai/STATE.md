@@ -53,7 +53,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | SR private evidence | `task/sr-private-synthetic-evidence` | `045ae47` | owner-only local synthetic evidence storage with watermark enforcement, quarantine and simulated scanning | typecheck, both builds, 14 unit/API tests including clean download, scanner failure and cross-account denial |
 | SR operations/publication | `task/sr-operations-publication-flow` | `83a930b` | generated seller fixture, operator-only review, separate eligibility/risk decisions, fail-closed demo publication and buyer visibility | typecheck, both builds, 15 unit/API tests; Chromium desktop seller/operations and 390px buyer journey pass |
 | SR checkout/passport | `task/sr-checkout-passport` | `622bcf5` | published synthetic offer checkout simulation and owner-scoped Reservation Passport with money disabled | typecheck, both builds, 16 unit/API tests; Chromium 390px checkout-to-Passport journey pass |
-| SR Passport transitions | `task/sr-passport-transitions` | pending | append-only, optimistic-version synthetic payment/transfer/arrival lifecycle with operator controls | typecheck, both builds, 17 unit/API tests; Chromium operations and 390px checked-in Passport pass |
+| SR Passport transitions | `task/sr-passport-transitions` | `0df8af0` | append-only, optimistic-version synthetic payment/transfer/arrival lifecycle with operator controls | typecheck, both builds, 17 unit/API tests; Chromium operations and 390px checked-in Passport pass |
 
 ## Persistent controls and blockers
 
