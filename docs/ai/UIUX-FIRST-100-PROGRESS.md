@@ -70,6 +70,10 @@ flowchart LR
 | 066 | Partial | Notification empty state; delivery provider pending |
 | 067 | Blocked | Identity/persistence/admin review unavailable |
 | 068 | Partial | Automated checks pass; browser usability review remains |
-| 069–100 | Not started | No completion claim |
+| 069–074 | Partial/safe shell | [Seller readiness](UIUX-FIRST-100-SELLER.md) |
+| 075 | Blocked | Private storage and scanning unavailable |
+| 076–079 | Done as safe shells | Draft/status/handoff/support surfaces |
+| 080 | Partial | Automated checks pass; authenticated mobile journey review remains |
+| 081–100 | Not started | No completion claim |
 
 The next bounded implementation is TASK-009: accessible design tokens. The canonical governance branch currently carries the audit commits; feature work must use atomic UI/UX branches and remain reviewable.

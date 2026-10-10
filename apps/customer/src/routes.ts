@@ -19,4 +19,9 @@ export default [
   route('buyer/alerts', 'pages/BuyerPage.tsx', { id: 'buyer-alerts' }),
   route('buyer/help', 'pages/BuyerPage.tsx', { id: 'buyer-help' }),
   route('account', 'pages/BuyerPage.tsx', { id: 'account' }),
+  route('seller', 'pages/SellerPage.tsx', { id: 'seller' }),
+  route('seller/submit', 'pages/SellerPage.tsx', { id: 'seller-submit' }),
+  route('seller/drafts', 'pages/SellerPage.tsx', { id: 'seller-drafts' }),
+  route('seller/status', 'pages/SellerPage.tsx', { id: 'seller-status' }),
+  route('seller/support', 'pages/SellerPage.tsx', { id: 'seller-support' }),
 ] satisfies RouteConfig;
