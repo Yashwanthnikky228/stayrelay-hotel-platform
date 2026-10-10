@@ -81,6 +81,12 @@ flowchart LR
 | 087 | Done as safe shell | Catalogue route |
 | 088–090 | Blocked | Admin sessions, audit storage and server settings unavailable |
 | 091 | Partial | Build/route boundary verified; role tests await identity |
-| 092–100 | Not started | No completion claim |
+| 092–093 | Done as contracts | [API and release readiness](UIUX-FIRST-100-API-QUALITY.md) |
+| 094 | Blocked | Approved non-production database unavailable |
+| 095 | Partial | Safe polling contract documented; no provider enabled |
+| 096 | Done | Existing API error taxonomy and UI mappings |
+| 097 | Done | Typecheck/build pass; unit command remains to run for release candidate |
+| 098–099 | Partial | Accessibility/performance guidance implemented; browser metrics unavailable |
+| 100 | Partial | Release-candidate report exists; preview/provider/approval gates remain |
 
 The next bounded implementation is TASK-092: API contracts and data readiness. The canonical governance branch currently carries the audit commits; feature work must use atomic UI/UX branches and remain reviewable.
