@@ -1,6 +1,6 @@
 # StayRelay AI Handoff State
 
-Updated: 2026-10-10. Active chunk: TASK-0001.
+Updated: 2026-10-10. Active chunk: TASK-0002.
 Repository: `Yashwanthnikky228/stayrelay-hotel-platform`.
 Current content branch/commit are the last row; this handoff is committed separately to avoid a self-referential SHA.
 Default main observed: `d7991ea5add5c01c1cc681f59e2285ab6bfea3ee`; no merge or production action.
@@ -30,6 +30,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | TASK-074C | `task-074/search-state-repair` | `a2d63bd21d1b143c3a30a42898c189c80fae54a4` | search cancellation, stale URL, truthful empty state | strict typecheck/build, 9 unit tests, Chromium empty/invalid state pass |
 | TASK-007 | `task-007/superseded-research` | `2457e4254761a44947673638bdbffdc76ba4004b` | classify older architecture research without deleting provenance | source-path/link inspection and diff check pass |
 | TASK-0001 | `task-0001/governing-charter` | `fcdfb4a76c73fade8eeb39588979113d37ae6ca2` | governing charter for the exact 1,100-task controller | workbook row/controller, repository, link and diff review |
+| TASK-0002 | `task-0002/canonical-source-hierarchy` | `c737348a496b911362ff32cf51dfb30413ac4bb5` | canonical source precedence and proof-boundary map | workbook dependency, source-map, link and diff review |
 
 ## Persistent controls and blockers
 
@@ -40,4 +41,4 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 - TASK-006 blocked: no callable Drive/spreadsheet tools for canonical workbook; no parallel register created. TASK-012 accountable owners/signatures are not evidenced.
 - TASK-079/080 require TASK-026 ownership/legal evidence; database/auth/transactions/preview release tasks downstream remain blocked. Features fail closed; fixtures are non-bookable; no valid QR or privileged action exists.
 - The active cloud configuration contains the tested install/start instructions and currently has no pending draft. This reconnected instance passed frozen pnpm install, strict typecheck, both framework builds, and all 9 unit tests; local customer `/`, customer `/passport`, operations `/`, and API health returned `200`, while inventory correctly returned `503 INVENTORY_NOT_CONFIGURED`. The saved checkout ref remains `main`; pushed feature branches still require review and merge before a fresh main checkout includes them.
-- Next: review TASK-0001, then execute dependency-ready TASK-0002 canonical-source mapping against the tracker and available audited sources. The uploaded workbook does not contain the referenced full sourcebook, so TASK-0002 must record that evidence gap rather than invent missing content.
+- Next: review TASK-0002, then execute dependency-ready TASK-0003 accountable-owner mapping. Missing named human owners must remain `Unassigned` or role-owned rather than being invented.
