@@ -1,11 +1,11 @@
 # SR authentication milestone — persistent synthetic seller drafts
 
-Status: In progress
+Status: Review
 Owner: Engineering Lead; security review unassigned
 Repository: Yashwanthnikky228/stayrelay-hotel-platform
 Branch: task/sr-test-auth-persistent-drafts
 Base commit: 6b70567f5c8f41badfc964dee448fcb45c585b8c
-Current head: Pending
+Current head: 847db21
 Pull request: Not created
 Controlling sources: `AGENTS.md`; `PLANS.md`; ADR-0002.1, ADR-0002.2, ADR-0002.3 and ADR-0002.9; supplemental SR-151–SR-175, SR-201–SR-250 and SR-501–SR-550
 Provider/environment mode: local isolated synthetic development; hosted identity and database unverified
@@ -54,9 +54,9 @@ No hosted provider is assumed. Supabase identity, project, region, RLS, backups 
 ## Progress
 
 - [x] 2026-10-11 00:50 IST — verified clean branch `6b70567`, remote parity, current API boundary and absence of migration/generated types.
-- [ ] 2026-10-11 00:50 IST — local server boundary.
-- [ ] 2026-10-11 00:50 IST — customer workspace and browser journey.
-- [ ] 2026-10-11 00:50 IST — evidence, tracker and handoff.
+- [x] 2026-10-11 01:00 IST — local server boundary: SQLite accounts/sessions/drafts/audit schema, opaque cookie session, owner-scoped commands and negative API tests.
+- [x] 2026-10-11 01:05 IST — customer workspace and browser journey: create, switch workspace, save, refresh, sign out/in, isolate second account and deny signed-out API.
+- [x] 2026-10-11 01:10 IST — evidence and tracker updated; hosted review remains pending.
 
 ## Decisions
 
@@ -66,7 +66,8 @@ No hosted provider is assumed. Supabase identity, project, region, RLS, backups 
 
 ## Discoveries
 
-None beyond the current absence of persistence/auth and the known Vercel DNS blocker.
+- React Router development requests `/favicon.ico`, which currently produces a non-blocking 404 in the server log.
+- The local SQLite file persists through API restarts when the same explicit `STAYRELAY_DEV_DB_PATH` is used. It is not a hosted durability claim.
 
 ## Security, privacy, accessibility, and money impact
 
@@ -74,7 +75,11 @@ Only synthetic `.test` profiles and fictional reservation fields are accepted. C
 
 ## Tests and evidence
 
-Required: `pnpm typecheck`, `pnpm build`, `pnpm test:unit`; focused HTTP tests using an isolated SQLite database; Chromium create/refresh/sign-out/sign-in/isolation journey; screenshot containing synthetic data only.
+- `pnpm typecheck`: passed.
+- `pnpm build`: customer and operations builds passed.
+- `pnpm test:unit`: 13/13 passed, including disabled adapter, invalid real-domain account, persistence, ownership isolation, revoked session and re-sign-in.
+- Chromium: create account, switch to seller, save draft, refresh, sign out/in, recover draft, second-account empty state and signed-out API 401 passed.
+- Evidence: `docs/ai/evidence/sr-auth-persistent-draft.png` contains synthetic data only.
 
 ## Rollback and recovery
 
@@ -82,4 +87,4 @@ Revert the bounded server and client commits. Stop services started for testing.
 
 ## Handoff, blockers, and next task
 
-Current head is pending. Hosted authentication/database and Vercel preview remain unverified. After this milestone, the next connected task is private synthetic evidence upload with quarantine/scanner simulation and owner-only access.
+Branch `task/sr-test-auth-persistent-drafts`; content head `847db21`; PR not created. Hosted authentication/database and Vercel preview remain unverified. Services started for testing were stopped. After this milestone, the next connected task is private synthetic evidence upload with quarantine/scanner simulation and owner-only access.

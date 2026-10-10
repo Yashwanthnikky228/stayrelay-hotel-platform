@@ -49,6 +49,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | TASK-0026–TASK-0050 | `task-0016/evidence-linkage` | `c42ec7f0adc6f18198d9114c3b6e2f145982432e` | repository and deployment baseline mapped to existing controls and current remote state | baseline/link/diff review; TASK-0045–TASK-0050 blocked at hosted or approval gates |
 | SR discovery slice | `task/sr-visible-discovery-slice` | `a70b99a891f1bac24c21619f278b76f168dc6f92` | synthetic homepage search to property detail with preserved URL state and disabled checkout | typecheck, both builds, 9 unit tests, Chromium navigation and screenshot pass |
 | SR location/navigation | `task/sr-location-responsive-navigation` | `98ae6f9` | exact-match synthetic destination context and responsive customer navigation | typecheck, both builds, 11 unit tests, Chromium 390px and desktop navigation pass |
+| SR local auth/drafts | `task/sr-test-auth-persistent-drafts` | `847db21` | local-only synthetic accounts, opaque HttpOnly sessions, SQLite seller drafts, buyer/seller workspace and owner isolation | typecheck, both builds, 13 unit/API tests, Chromium persistence/isolation/sign-out journey pass |
 
 ## Persistent controls and blockers
 
@@ -77,4 +78,6 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 - Reconciliation accepts the canonical documentation history through `d705732` and excludes later UI bulk commits pending a task-by-task audit; see `TASK-0016-0050-RECONCILIATION.md`.
 - The founder-supplied 750-row synthetic coverage framework is retained separately as `docs/project-control/StayRelay_750_Task_Supplemental_Tracker.xlsx`. It contains a validated per-package dependency DAG and implementation evidence but does not replace or unblock the canonical 1,100-task approval controller.
 - Synthetic discovery implementation now includes a dedicated fictional property-detail route, preserved search state, exact-match Mumbai/Hyderabad/Bengaluru context, and responsive navigation. Live inventory, checkout, identity collection and money movement remain disabled.
+- Local synthetic authentication is enabled only with `STAYRELAY_TEST_AUTH=enabled`. It accepts reserved `.test` accounts, stores session-token digests and private drafts in the explicit local SQLite database, and denies cross-account or revoked-session access. This is locally tested behavior, not hosted identity, Supabase, RLS, backup or production evidence.
+- The next connected synthetic milestone is owner-only evidence upload with quarantine/scanner simulation. Real identity-document collection remains disabled.
 - Next canonical task is TASK-0051, but it depends on blocked TASK-0050. TASK-0076 shares that dependency. Continue only with an independently dependency-ready row or after the named external gates are evidenced.
