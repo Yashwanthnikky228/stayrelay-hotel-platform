@@ -45,6 +45,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | TASK-0014 | `task-0014/working-templates` | `73a6d9d662e269fba08fd9a6b521f2f51f5b741a` | task, ADR, incident and handoff templates capturing sources, invariants, tests and continuation state | template field/coverage review, typecheck, both builds, 9 unit tests |
 | TASK-0015 | `task-0015/control-register` | `a79ce602ea422858421f6ad5a4cb4b182daad508` | 25 queryable project controls with status, evidence, accountable role and next action | register schema/status/source reconciliation, typecheck, both builds, 9 unit tests |
 | TASK-0016 | `task-0016/evidence-linkage` | `ff855cda215f452d763b1292c46ebd347dedf170` | durable repository links and external-authority classification for completed project controls | 30 path checks, 15 commit ancestry checks, remote Git ref reads, document link/diff review |
+| TASK-0017–TASK-0025 | `task-0016/evidence-linkage` | `744d62be458a25523c6e727754228729b23a0357` | governance continuation: open questions, data/security review, access boundaries, traceability, rollback, review map and runbook | document link/diff review; TASK-0023 and TASK-0025 explicitly blocked by unresolved external authority |
 
 ## Persistent controls and blockers
 
@@ -68,4 +69,5 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 - The current remote `main` contains the customer, operations and API workspaces. The user handoff identifies customer deployment `dpl_7sUV3h6XqR1hmZ7u4Aaajdpp5mZS` and operations deployment `dpl_85XV8nEBF8pMpFnGKPLP35jdDeYt` as READY from `c2e337e4...`; these are retained as user-supplied evidence pending an authenticated Vercel read.
 - TASK-0015 records 13 implemented, 6 partial and 6 blocked controls. Repository control status remains distinct from human acceptance, hosted enforcement, merge, deployment and production certification.
 - TASK-0016 links every completed canonical task through TASK-0015 to 30 durable repository artifacts and 15 ancestor commits. Remote Git state is server-confirmed; unavailable external reads remain explicitly below server-verified status.
-- Next: review TASK-0016, then execute dependency-ready TASK-0017 open-question recording or the independent TASK-0026 root on its own branch.
+- TASK-0017 through TASK-0022 and TASK-0024 now have repository evidence. TASK-0023 remains blocked by unresolved legal, provider, hosted-state, retention and release-approval gaps; TASK-0025 therefore remains blocked and is not a production authorization.
+- Next: review the governance continuation, then execute independent dependency-ready TASK-0026 repository/deployment baseline on its own branch; do not treat the blocked TASK-0025 gate as passed.
