@@ -68,6 +68,7 @@ export function MarketplacePage() {
   const [searchState, setSearchState] = useState<SearchState>('idle');
   const [serverOffers, setServerOffers] = useState<PropertyOffer[] | null>(null);
   const [selectedOfferId, setSelectedOfferId] = useState<string>(previewOffers[0]?.id ?? '');
+  const [mode, setMode] = useState<'find' | 'sell'>('find');
   const searchController = useRef<AbortController | null>(null);
   const searchFormRef = useRef<HTMLFormElement>(null);
 
@@ -153,6 +154,12 @@ export function MarketplacePage() {
     setFieldError(undefined);
     setSearchMessage(undefined);
 
+    if (mode === 'sell') {
+      setSearchState('error');
+      setSearchMessage('Reservation submission is not enabled for this pilot yet. No draft or listing was created.');
+      return;
+    }
+
     let searchFilters: PropertySearchFilters;
     try {
       searchFilters = toFilters(filters);
@@ -211,11 +218,18 @@ export function MarketplacePage() {
         <div aria-hidden="true" className="absolute -right-20 -top-28 h-80 w-80 rounded-full border border-white/10" />
         <div aria-hidden="true" className="absolute -right-7 -top-14 h-56 w-56 rounded-full border border-white/10" />
         <p className="relative text-sm font-medium text-brand-50">StayRelay · quiet hospitality, precise transactions</p>
-        <h1 className="relative mt-3 max-w-3xl font-editorial text-4xl leading-tight md:text-6xl">Find a stay. Know what happens next.</h1>
+        <h1 className="relative mt-3 max-w-3xl font-editorial text-4xl leading-tight md:text-6xl">{mode === 'sell' ? 'Submit a reservation. Know what gets reviewed.' : 'Find a stay. Know what happens next.'}</h1>
         <p className="relative mt-4 max-w-2xl leading-7 text-divider">Search exact dates and review the total price. Only reservations with a confirmed, authorised transfer route can appear as eligible stays.</p>
+        {filters.destination.trim() && <p className="relative mt-4 text-sm font-semibold text-white/90">Discovery context: {filters.destination.trim()}</p>}
       </section>
 
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Choose discovery mode">
+        <button type="button" onClick={() => setMode('find')} aria-pressed={mode === 'find'} className={`min-h-11 rounded-control px-4 py-2 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 ${mode === 'find' ? 'bg-brand-600 text-white' : 'border border-divider bg-surface text-ink-900'}`}>Find a stay</button>
+        <button type="button" onClick={() => setMode('sell')} aria-pressed={mode === 'sell'} className={`min-h-11 rounded-control px-4 py-2 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 ${mode === 'sell' ? 'bg-brand-600 text-white' : 'border border-divider bg-surface text-ink-900'}`}>Sell a reservation</button>
+      </div>
+
       <SearchFilters
+        mode={mode}
         value={filters}
         formRef={searchFormRef}
         isSearching={searchState === 'loading'}

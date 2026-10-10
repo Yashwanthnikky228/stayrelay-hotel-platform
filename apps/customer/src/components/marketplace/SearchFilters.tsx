@@ -9,6 +9,7 @@ export interface MarketplaceSearchValues {
 }
 
 interface SearchFiltersProps {
+  mode: 'find' | 'sell';
   value: MarketplaceSearchValues;
   formRef: RefObject<HTMLFormElement | null>;
   isSearching: boolean;
@@ -20,7 +21,7 @@ interface SearchFiltersProps {
 
 const controlClass = 'mt-1 min-h-12 w-full rounded-control border border-divider bg-surface px-3 text-ink-900 placeholder:text-ink-600 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-brand-600 focus-visible:ring-offset-2';
 
-export function SearchFilters({ value, formRef, isSearching, errorMessage, onChange, onSubmit, onReset }: SearchFiltersProps) {
+export function SearchFilters({ mode, value, formRef, isSearching, errorMessage, onChange, onSubmit, onReset }: SearchFiltersProps) {
   const errorRef = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
@@ -33,6 +34,12 @@ export function SearchFilters({ value, formRef, isSearching, errorMessage, onCha
 
   return (
     <form ref={formRef} aria-describedby={errorMessage ? 'marketplace-search-error' : undefined} className="rounded-card border border-divider bg-surface p-5 shadow-sm md:p-6" onSubmit={onSubmit}>
+      <div className="mb-5 flex flex-wrap gap-2" role="group" aria-label="Discovery mode">
+        <span className="mr-2 self-center text-sm font-semibold text-ink-900">I want to</span>
+        <span className={`rounded-full px-3 py-1.5 text-sm font-semibold ${mode === 'find' ? 'bg-brand-50 text-brand-700' : 'bg-canvas text-ink-600'}`}>Find a stay</span>
+        <span className={`rounded-full px-3 py-1.5 text-sm font-semibold ${mode === 'sell' ? 'bg-brand-50 text-brand-700' : 'bg-canvas text-ink-600'}`}>Sell a reservation</span>
+        {mode === 'sell' && <p className="basis-full text-sm text-ink-600">Submission is a draft only. It will not create a listing or transfer.</p>}
+      </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         <label className="field-label xl:col-span-2">
           Destination
@@ -60,7 +67,7 @@ export function SearchFilters({ value, formRef, isSearching, errorMessage, onCha
       {errorMessage && <p ref={errorRef} id="marketplace-search-error" className="mt-4 rounded-control bg-error-50 px-3 py-2 text-sm text-error-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error-700" role="alert" tabIndex={-1}>{errorMessage}</p>}
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <button className="min-h-12 rounded-control bg-brand-600 px-5 font-semibold text-white transition-colors hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70" type="submit" disabled={isSearching}>
-          {isSearching ? 'Searching…' : 'Search eligible stays'}
+          {isSearching ? 'Checking…' : mode === 'sell' ? 'Start a reservation draft' : 'Search eligible stays'}
         </button>
         <button className="min-h-12 rounded-control border border-divider bg-surface px-4 font-medium text-ink-900 hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2" type="button" onClick={onReset}>
           Reset filters
