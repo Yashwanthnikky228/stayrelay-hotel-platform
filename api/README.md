@@ -1,6 +1,10 @@
 # Vercel API adapters
 
-`health.ts`, `properties.ts`, and `not-found.ts` use the same typed response contract as the local Express API in `apps/api/src/responses.ts`.
+`health.ts`, `properties.ts`, and `not-found.ts` are self-contained hosting adapters.
+They expose the same response contract as the local Express API; unit contract
+tests cover parity. They deliberately avoid runtime imports across workspace
+package boundaries, which failed in hosted function execution. Type-only Vercel
+imports are erased during compilation.
 
 - `GET`/`HEAD /api/health` reports API process readiness.
 - `GET`/`HEAD /api/properties` returns `503 INVENTORY_NOT_CONFIGURED` until verified reservation-specific inventory and policy controls exist.
