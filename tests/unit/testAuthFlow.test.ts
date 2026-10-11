@@ -159,6 +159,11 @@ test('support cases stay owner-scoped and use protected version-checked recovery
   const preference = await json('/notification-preferences', { headers: { cookie: buyerCookie } }); assert.equal(preference.response.status, 200); assert.equal((preference.body?.preference as { version: number; inAppEnabled: boolean }).inAppEnabled, true);
   assert.equal((await json('/notification-preferences', { method: 'POST', headers: { cookie: buyerCookie }, body: JSON.stringify({ inAppEnabled: false, expectedVersion: 1 }) })).response.status, 200);
   assert.equal((await json('/notification-preferences', { method: 'POST', headers: { cookie: buyerCookie }, body: JSON.stringify({ inAppEnabled: true, expectedVersion: 1 }) })).response.status, 409);
+  const muted = await json('/support-cases', { headers: { cookie: buyerCookie } });
+  assert.deepEqual(muted.body?.updates, []);
+  assert.deepEqual(muted.body?.cases, projection.body?.cases);
+  assert.equal((await json('/notification-preferences', { method: 'POST', headers: { cookie: buyerCookie }, body: JSON.stringify({ inAppEnabled: true, expectedVersion: 2 }) })).response.status, 200);
+  assert.deepEqual((await json('/support-cases', { headers: { cookie: buyerCookie } })).body?.updates, projection.body?.updates);
   const updateId = ((projection.body?.updates as { id: string }[])[0]).id;
   const operatorDelivery = await json(`/operations/support-updates/${updateId}/delivery`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ outcome: 'failed' }) }); assert.equal(operatorDelivery.response.status, 200);
   assert.equal((await json(`/operations/support-updates/${updateId}/delivery`, { method: 'POST', headers: { cookie: buyerCookie }, body: JSON.stringify({ outcome: 'delivered' }) })).response.status, 403);

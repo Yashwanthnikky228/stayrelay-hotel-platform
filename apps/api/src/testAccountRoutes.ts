@@ -118,7 +118,10 @@ export function handleTestAccountRoute(request: Request, response: Response, sto
     response.status(201).json(result); return true;
   }
   if (request.path === '/passports' && request.method === 'GET') { response.json({ passports: store.listPassports(account.id) }); return true; }
-  if (request.path === '/support-cases' && request.method === 'GET') { response.json({ cases: store.listSupportCases(account.id), updates: store.listSupportUpdates(account.id) }); return true; }
+  if (request.path === '/support-cases' && request.method === 'GET') {
+    const enabled = store.getNotificationPreference(account.id).inAppEnabled;
+    response.json({ cases: store.listSupportCases(account.id), updates: enabled ? store.listSupportUpdates(account.id) : [] }); return true;
+  }
   if (request.path === '/recovery-cases' && request.method === 'GET') { response.json({ cases: store.listRecoveryCases(account.id) }); return true; }
   if (request.path === '/recovery-cases' && request.method === 'POST') {
     const input = body(request); const passportId = String(input.passportId ?? ''); const requestType = String(input.requestType) as SyntheticRecoveryRequestType; const reason = String(input.reason ?? '').trim(); const explanation = String(input.explanation ?? '').trim();
