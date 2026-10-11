@@ -17,6 +17,48 @@ function fixture() {
   return { store, owner, other, operator, open, cleanup: () => { for (const item of stores) item.database.close(); rmSync(root, { recursive: true, force: true }); } };
 }
 
+test('preference audit failure rolls back its version and permits retry after reopen', () => {
+  const f = fixture();
+  try {
+    const initial = f.store.getNotificationPreference(f.owner.id);
+    f.store.database.exec("CREATE TRIGGER fail_preference BEFORE INSERT ON audit_events WHEN NEW.target_type = 'notification_preference' BEGIN SELECT RAISE(ABORT, 'audit unavailable'); END");
+    assert.throws(() => f.store.setNotificationPreference(f.owner.id, false, 1), /audit unavailable/);
+    assert.deepEqual(f.open().getNotificationPreference(f.owner.id), initial);
+    f.store.database.exec('DROP TRIGGER fail_preference');
+    assert.equal(typeof f.store.setNotificationPreference(f.owner.id, false, 1), 'object');
+    assert.equal(f.open().getNotificationPreference(f.owner.id).inAppEnabled, false);
+    assert.equal(f.store.setNotificationPreference(f.owner.id, true, 1), 'version_conflict');
+  } finally { f.cleanup(); }
+});
+
+test('recovery audit failure preserves state, retry persists and stale decisions fail closed', () => {
+  const f = fixture();
+  try {
+    const draft = f.store.createDraft(f.other.id, { hotelName: 'Synthetic Hotel', city: 'Mumbai', checkIn: '2027-03-01', checkOut: '2027-03-04', guestCount: 2 });
+    // Seed publication only: this test targets recovery durability, not review eligibility.
+    f.store.database.prepare('INSERT INTO demo_listings (draft_id, published_at) VALUES (?, ?)').run(draft.id, new Date().toISOString());
+    const checkout = f.store.createCheckoutSimulation(f.owner.id, `demo-offer-${draft.id}`);
+    if (typeof checkout === 'string') throw new Error(checkout);
+    const item = f.store.createRecoveryCase(f.owner.id, checkout.passport.id, 'refund_review', 'Synthetic request', 'No real payment');
+    if (typeof item === 'string') throw new Error(item);
+    const ordersBefore = f.store.database.prepare('SELECT * FROM synthetic_orders').all();
+    const passportsBefore = f.store.listPassports(f.owner.id);
+    f.store.database.exec("CREATE TRIGGER fail_recovery BEFORE INSERT ON audit_events WHEN NEW.action = 'recovery_case.under_review' BEGIN SELECT RAISE(ABORT, 'audit unavailable'); END");
+    assert.throws(() => f.store.transitionRecoveryCase(f.operator.id, item.id, 'under_review', 1), /audit unavailable/);
+    const second = f.open();
+    assert.deepEqual(second.listRecoveryCases(f.owner.id), [item]);
+    assert.equal(second.database.prepare('SELECT COUNT(*) AS n FROM audit_events WHERE target_id = ?').get(item.id)?.n, 1);
+    f.store.database.exec('DROP TRIGGER fail_recovery');
+    assert.equal(typeof second.transitionRecoveryCase(f.operator.id, item.id, 'under_review', 1), 'object');
+    assert.equal(f.store.transitionRecoveryCase(f.operator.id, item.id, 'recovery_pending', 1), 'version_conflict');
+    assert.equal(f.store.transitionRecoveryCase(f.operator.id, item.id, 'approved_synthetic_refund', 2), 'invalid_transition');
+    assert.equal(f.open().listRecoveryCases(f.other.id)[0].status, 'under_review');
+    assert.deepEqual(f.store.database.prepare('SELECT * FROM synthetic_orders').all(), ordersBefore);
+    assert.deepEqual(f.store.listPassports(f.owner.id), passportsBefore);
+    assert.deepEqual(f.store.database.prepare('SELECT action FROM audit_events WHERE target_id = ? ORDER BY rowid').all(item.id).map(row => row.action), ['recovery_case.submitted', 'recovery_case.under_review']);
+  } finally { f.cleanup(); }
+});
+
 test('support survives database reopen and rejects stale writes from another connection', () => {
   const f = fixture();
   try {

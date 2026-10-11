@@ -262,8 +262,13 @@ export class TestStore {
     const item = this.listRecoveryCases().find((candidate) => candidate.id === caseId); if (!item) return 'not_found';
     const allowed: Record<SyntheticRecoveryStatus, SyntheticRecoveryStatus[]> = { submitted: ['under_review'], under_review: ['waiting_for_user','recovery_pending','rejected'], waiting_for_user: ['under_review','closed'], recovery_pending: ['approved_synthetic_refund','rejected'], approved_synthetic_refund: ['closed'], draft: [], rejected: ['closed'], closed: [] };
     if (item.version !== expectedVersion) return 'version_conflict'; if (!allowed[item.status].includes(status)) return 'invalid_transition';
-    const updatedAt = now(); const version = item.version + 1; const changed = this.database.prepare('UPDATE synthetic_recovery_cases SET status = ?, version = ?, updated_at = ? WHERE id = ? AND version = ?').run(status, version, updatedAt, caseId, expectedVersion); if (!changed.changes) return 'version_conflict';
-    this.audit(operatorId, `recovery_case.${status}`, 'synthetic_recovery_case', caseId); return { ...item, status, version, updatedAt };
+    return this.supportTransaction(() => {
+      const updatedAt = now(); const version = item.version + 1;
+      const changed = this.database.prepare('UPDATE synthetic_recovery_cases SET status = ?, version = ?, updated_at = ? WHERE id = ? AND version = ?').run(status, version, updatedAt, caseId, expectedVersion);
+      if (!changed.changes) return 'version_conflict';
+      this.audit(operatorId, `recovery_case.${status}`, 'synthetic_recovery_case', caseId);
+      return { ...item, status, version, updatedAt };
+    });
   }
 
   listSupportCases(ownerId?: string): SyntheticSupportCase[] {
@@ -306,10 +311,12 @@ export class TestStore {
     const current = this.getNotificationPreference(ownerId);
     if (current.version !== expectedVersion) return 'version_conflict';
     const updatedAt = now(); const version = current.version + 1;
-    const changed = this.database.prepare('UPDATE synthetic_notification_preferences SET in_app_enabled = ?, version = ?, updated_at = ? WHERE owner_id = ? AND version = ?').run(inAppEnabled ? 1 : 0, version, updatedAt, ownerId, expectedVersion);
-    if (!changed.changes) return 'version_conflict';
-    this.audit(ownerId, 'notification.preference_changed', 'notification_preference', ownerId);
-    return { ownerId, inAppEnabled, version, updatedAt };
+    return this.supportTransaction(() => {
+      const changed = this.database.prepare('UPDATE synthetic_notification_preferences SET in_app_enabled = ?, version = ?, updated_at = ? WHERE owner_id = ? AND version = ?').run(inAppEnabled ? 1 : 0, version, updatedAt, ownerId, expectedVersion);
+      if (!changed.changes) return 'version_conflict';
+      this.audit(ownerId, 'notification.preference_changed', 'notification_preference', ownerId);
+      return { ownerId, inAppEnabled, version, updatedAt };
+    });
   }
 
   recordDeliveryAttempt(operatorId: string, updateId: string, outcome: SyntheticDeliveryAttempt['outcome']): SyntheticDeliveryAttempt | 'not_found' {
