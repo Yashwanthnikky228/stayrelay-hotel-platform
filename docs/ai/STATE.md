@@ -56,7 +56,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | SR Passport transitions | `task/sr-passport-transitions` | `0df8af0` | append-only, optimistic-version synthetic payment/transfer/arrival lifecycle with operator controls | typecheck, both builds, 17 unit/API tests; Chromium operations and 390px checked-in Passport pass |
 | SR in-progress closure | `task/sr-in-progress-closure` | `6f7e370` | resolved all 111 previously In-progress tracker rows using shared contracts, complete audit metadata, timeout/retry states and consolidated QA | typecheck, both builds, 18 unit/API tests; Chromium 320/768/1440 reflow, keyboard, reduced-motion and connected operations pass |
 | SR support/recovery | `task/sr-support-recovery` | `7386cb6` | owner-scoped synthetic support cases and protected, version-checked operator escalation/resolution; all real communications and financial outcomes remain disabled | typecheck, both builds, 19 unit/API tests; Chromium customer 390px, operations desktop, plus 320/768/1280 reflow and keyboard focus pass |
-| SR synthetic recovery | `task/sr-support-notifications` | `45aad56` | buyer-linked cancellation/refund/recovery cases with operator state machine, audit trail, seller visibility and payment-provider safety boundary | typecheck, both builds, 24 unit/API tests; Chromium buyer 390px and operations recovery queue 1280px |
+| SR synthetic recovery | `task/sr-support-notifications` | `d00a5a2` | buyer-linked cancellation/refund/recovery cases with operator state machine, audit trail, seller visibility and payment-provider safety boundary | typecheck, both builds, 24 unit/API tests; Chromium buyer 390px and operations recovery queue 1280px |
 
 ## Persistent controls and blockers
 
