@@ -44,7 +44,12 @@ const assert = require('node:assert/strict');
     await page.getByText('Menu', { exact: true }).click();
     await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('link', { name: 'Support', exact: true }).waitFor();
     await page.screenshot({ path: '/workspace/stayrelay-live-mobile.png', fullPage: true });
-    console.log('PASS public homepage, city selection, property details, portal shells, four widths and mobile navigation');
+    for (const [path, expected] of [['health', 200], ['properties', 503], ['test-auth/session', 404]]) {
+      const result = execFileSync('curl', ['-sS', '--max-time', '20', '-o', join(root, 'api.json'), '-w', '%{http_code}', origin + '/api/' + path], { encoding: 'utf8' });
+      assert.equal(Number(result), expected, path);
+      JSON.parse(readFileSync(join(root, 'api.json'), 'utf8'));
+    }
+    console.log('PASS public homepage, city selection, property details, portal shells, four widths, mobile navigation and fail-closed JSON API');
   } finally {
     await browser.close();
     rmSync(root, { recursive: true, force: true });

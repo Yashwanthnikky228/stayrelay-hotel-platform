@@ -103,6 +103,14 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 
 ## Latest continuation: recovery durability (2026-10-11)
 
+### Public demo deployed (supersedes prior unmerged checkpoints)
+
+- PR #7 merged to main as be3793c; PR #8 merged as ce906b04af6e026d9424f59bb0faabef3e313895. Existing customer production deployment dpl_H3ZU5eLT1e2t9WiFMYYLozj3GRwx is READY. Public URL: https://stayrelay-hotel-platform.vercel.app/.
+- Visible homepage redesign and city shortcuts are deployed. Public browser tests cover city selection, property detail, portal shells, mobile navigation and 320/390/768/1280 widths. Screenshots: /workspace/stayrelay-live-desktop.png and /workspace/stayrelay-live-mobile.png.
+- Root cause of intermittent CI failures: default SQLite database creation at module import raced across workers. Server now owns initialization; tests inject isolated stores. All 28 local tests, typecheck/builds and both remote validation jobs pass for the adapter-fix branch.
+- First public API smoke exposed serverless HTTP 500. Native extension fix alone was insufficient; self-contained public adapters in dda7e54 returned expected preview JSON 200/503/404. Production fix is ce906b0; evidence in SR-PUBLIC-DEMO-RELEASE.md.
+- Accounts/private documents/review/checkout/recovery remain LOCAL ONLY, not hosted. No real transactions, identity collection or transfers. Next: persistent recovery draft/edit/submit and timeline; hosted backend requires approved durable identity/database/private storage. Supplemental total remains 239 Done / 511 Not started; no complete-product claim.
+
 ### Latest checkpoint: application test gates
 
 - Branch `task/sr-test-gates`; code `26a5c13`, based on eb6dd86. Added CI unit/API tests, strict typecheck and both builds; recovery rejects non-string input fields with 20 malformed-field assertions and no persisted case.

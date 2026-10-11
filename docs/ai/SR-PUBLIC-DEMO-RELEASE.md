@@ -21,7 +21,11 @@ remained enabled. No protection or TLS validation was disabled.
 Post-release API smoke exposed HTTP 500 on serverless adapters. Native Node
 reproduces ERR_MODULE_NOT_FOUND for responses.ts importing ./health without an
 extension. Follow-up explicitly imports ./health.ts and adds a native Node test
-without tsx resolution. Hosted fix must be verified before closing this incident.
+without tsx resolution. That extension change alone did not fix hosted execution.
+Self-contained adapters in dda7e54 then returned expected preview JSON statuses:
+health 200, inventory 503, unknown auth 404. Both GitHub validation jobs passed.
+PR #8 merged as ce906b04af6e026d9424f59bb0faabef3e313895; existing production
+deployment dpl_H3ZU5eLT1e2t9WiFMYYLozj3GRwx reached READY.
 
 CI intermittent failure was traced via check annotations to import-time default
 SQLite creation across workers; app.ts now exports only the factory, server.ts
