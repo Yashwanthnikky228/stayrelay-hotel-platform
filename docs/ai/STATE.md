@@ -103,6 +103,12 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 
 ## Latest continuation: recovery durability (2026-10-11)
 
+### Newer checkpoint: recovery selection/preference
+
+- Branch `task/sr-recovery-selection`, implementation `a7b88dd` (pushed), builds on a22e5a3. Explicit recovery Passport selection, duplicate-submit guard, stale-choice clearing and server-enforced notification feed preference are implemented.
+- 27 unit/API tests, strict typecheck, both builds and repeatable Chromium contract checks pass. Browser widths 320/390/768/1280; details in `SR-SELECTION-PREFERENCE-QA.md`.
+- Next executable work: persisted recovery draft/edit/submit workflow followed by owner-scoped timeline and seller permissions. No new Done row claims; canonical release gates preserved. No production merge/promotion.
+
 - Branch `task/sr-recovery-atomicity`; implementation commits `12dc050` and `1f1f511`, pushed. Recovery decisions, preferences and simulated delivery writes now roll back when their audits fail. 27 tests, typecheck and both builds pass.
 - Supersedes earlier DNS-only blocker: Vercel authenticated access WORKS through the existing HTTPS proxy. Existing project and main production branch verified. Git-generated preview for `12dc050` is READY; see `SR-RECOVERY-DURABILITY-QA.md`. SSO prevents unauthenticated preview smoke verification; no production promotion occurred.
 - GitHub API still fails proxy CONNECT 403; Git read/push works. Normal review/check/merge access must be restored, not bypassed.
