@@ -324,11 +324,13 @@ export class TestStore {
     if (!update) return 'not_found';
     const owner = this.database.prepare('SELECT owner_id FROM synthetic_support_cases WHERE id = ?').get(update.case_id) as { owner_id: string } | undefined;
     if (!owner) return 'not_found';
+    return this.supportTransaction(() => {
     const prior = this.database.prepare('SELECT COUNT(*) AS count FROM synthetic_delivery_attempts WHERE update_id = ?').get(updateId) as { count: number };
     const timestamp = now(); const attempt: SyntheticDeliveryAttempt = { id: randomUUID(), updateId, ownerId: owner.owner_id, outcome, attempt: Number(prior.count) + 1, version: Number(prior.count) + 1, createdAt: timestamp, ...(outcome === 'failed' ? { errorCode: 'DELIVERY_SIMULATED_FAILURE' as const } : {}) };
     this.database.prepare('INSERT INTO synthetic_delivery_attempts (id, update_id, owner_id, outcome, attempt, version, created_at, error_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(attempt.id, updateId, owner.owner_id, outcome, attempt.attempt, attempt.version, timestamp, attempt.errorCode ?? null);
     this.audit(operatorId, `notification.delivery_${outcome}`, 'synthetic_delivery_attempt', attempt.id);
     return attempt;
+    });
   }
 
   private supportTransaction<T>(command: () => T): T {

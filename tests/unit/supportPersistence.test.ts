@@ -134,3 +134,19 @@ test('notification preference and disconnected delivery simulation are versioned
     assert.equal(f.store.recordDeliveryAttempt(f.operator.id, 'missing', 'delivered'), 'not_found');
   } finally { f.cleanup(); }
 });
+
+test('delivery audit failure rolls back the attempt and preserves numbering on retry', () => {
+  const f = fixture();
+  try {
+    f.store.createSupportCase(f.owner.id, 'arrival_help');
+    const update = f.store.listSupportUpdates(f.owner.id)[0];
+    f.store.database.exec("CREATE TRIGGER fail_delivery BEFORE INSERT ON audit_events WHEN NEW.target_type = 'synthetic_delivery_attempt' BEGIN SELECT RAISE(ABORT, 'audit unavailable'); END");
+    assert.throws(() => f.store.recordDeliveryAttempt(f.operator.id, update.id, 'failed'), /audit unavailable/);
+    assert.equal(f.open().database.prepare('SELECT COUNT(*) AS n FROM synthetic_delivery_attempts').get()?.n, 0);
+    f.store.database.exec('DROP TRIGGER fail_delivery');
+    const result = f.store.recordDeliveryAttempt(f.operator.id, update.id, 'failed');
+    if (typeof result === 'string') throw new Error(result);
+    assert.equal(result.attempt, 1);
+    assert.equal(f.open().database.prepare('SELECT COUNT(*) AS n FROM audit_events WHERE target_id = ?').get(result.id)?.n, 1);
+  } finally { f.cleanup(); }
+});
