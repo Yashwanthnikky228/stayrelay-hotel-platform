@@ -77,3 +77,18 @@ test('support update projection is bounded to the latest 100 saved events', () =
     assert.equal(updates[0].id, latest?.id);
   } finally { f.cleanup(); }
 });
+
+test('notification preference and disconnected delivery simulation are versioned and fail closed', () => {
+  const f = fixture();
+  try {
+    const initial = f.store.getNotificationPreference(f.owner.id); assert.equal(initial.inAppEnabled, true); assert.equal(initial.version, 1);
+    const disabled = f.store.setNotificationPreference(f.owner.id, false, 1); assert.equal(typeof disabled, 'object');
+    assert.equal(f.store.setNotificationPreference(f.owner.id, true, 1), 'version_conflict');
+    const item = f.store.createSupportCase(f.owner.id, 'arrival_help'); if (typeof item === 'string') throw new Error(item);
+    const update = f.store.listSupportUpdates(f.owner.id)[0];
+    const delivered = f.store.recordDeliveryAttempt(f.operator.id, update.id, 'delivered'); assert.equal(typeof delivered, 'object');
+    const failed = f.store.recordDeliveryAttempt(f.operator.id, update.id, 'failed'); assert.equal(typeof failed, 'object');
+    assert.equal((failed as { attempt: number }).attempt, 2); assert.equal((failed as { errorCode?: string }).errorCode, 'DELIVERY_SIMULATED_FAILURE');
+    assert.equal(f.store.recordDeliveryAttempt(f.operator.id, 'missing', 'delivered'), 'not_found');
+  } finally { f.cleanup(); }
+});

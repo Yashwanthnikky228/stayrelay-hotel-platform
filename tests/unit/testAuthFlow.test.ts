@@ -156,6 +156,13 @@ test('support cases stay owner-scoped and use protected version-checked recovery
   const owned = projection.body?.cases as { status: string; version: number }[]; assert.equal(owned[0].status, 'resolved'); assert.equal(owned[0].version, 3);
   assert.deepEqual((projection.body?.updates as { event: string }[]).map((update) => update.event), ['resolved', 'escalated', 'created']);
   assert.deepEqual((await json('/support-cases', { headers: { cookie: otherCookie } })).body?.updates, []);
+  const preference = await json('/notification-preferences', { headers: { cookie: buyerCookie } }); assert.equal(preference.response.status, 200); assert.equal((preference.body?.preference as { version: number; inAppEnabled: boolean }).inAppEnabled, true);
+  assert.equal((await json('/notification-preferences', { method: 'POST', headers: { cookie: buyerCookie }, body: JSON.stringify({ inAppEnabled: false, expectedVersion: 1 }) })).response.status, 200);
+  assert.equal((await json('/notification-preferences', { method: 'POST', headers: { cookie: buyerCookie }, body: JSON.stringify({ inAppEnabled: true, expectedVersion: 1 }) })).response.status, 409);
+  const updateId = ((projection.body?.updates as { id: string }[])[0]).id;
+  const operatorDelivery = await json(`/operations/support-updates/${updateId}/delivery`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ outcome: 'failed' }) }); assert.equal(operatorDelivery.response.status, 200);
+  assert.equal((await json(`/operations/support-updates/${updateId}/delivery`, { method: 'POST', headers: { cookie: buyerCookie }, body: JSON.stringify({ outcome: 'delivered' }) })).response.status, 403);
+  assert.equal((await json(`/operations/support-updates/${updateId}/delivery`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ outcome: 'bogus' }) })).response.status, 400);
 });
 
 test('audit records carry actor, reason, correlation, target and timestamp without document content', () => {

@@ -18,7 +18,7 @@ function setSession(response: Response, token: string) {
 }
 
 export function handleTestAccountRoute(request: Request, response: Response, store: TestStore, enabled: boolean): boolean {
-  if (!request.path.startsWith('/test-auth') && request.path !== '/account' && request.path !== '/properties' && request.path !== '/checkout-simulations' && request.path !== '/passports' && request.path !== '/support-cases' && !request.path.startsWith('/seller-drafts') && !request.path.startsWith('/synthetic-evidence') && !request.path.startsWith('/operations/')) return false;
+  if (!request.path.startsWith('/test-auth') && request.path !== '/account' && request.path !== '/properties' && request.path !== '/checkout-simulations' && request.path !== '/passports' && request.path !== '/support-cases' && !request.path.startsWith('/seller-drafts') && !request.path.startsWith('/synthetic-evidence') && !request.path.startsWith('/notification-preferences') && !request.path.startsWith('/operations/')) return false;
   response.setHeader('Cache-Control', 'no-store');
   if (!enabled && request.path === '/properties') return false;
   if (!enabled) { error(response, 503, 'TEST_AUTH_DISABLED', 'Local synthetic authentication is disabled.'); return true; }
@@ -61,6 +61,14 @@ export function handleTestAccountRoute(request: Request, response: Response, sto
     if (request.path === '/operations/reviews' && request.method === 'GET') { response.json({ reviews: store.listReviewQueue() }); return true; }
     if (request.path === '/operations/passports' && request.method === 'GET') { response.json({ passports: store.listAllPassports() }); return true; }
     if (request.path === '/operations/support-cases' && request.method === 'GET') { response.json({ cases: store.listSupportCases() }); return true; }
+    const deliveryMatch = request.path.match(/^\/operations\/support-updates\/([^/]+)\/delivery$/);
+    if (deliveryMatch && request.method === 'POST') {
+      const outcome = String(body(request).outcome);
+      if (!['queued', 'delivered', 'failed'].includes(outcome)) { error(response, 400, 'INVALID_DELIVERY_OUTCOME', 'Use queued, delivered or failed.'); return true; }
+      const attempt = store.recordDeliveryAttempt(account.id, deliveryMatch[1], outcome as 'queued' | 'delivered' | 'failed');
+      if (attempt === 'not_found') { error(response, 404, 'SUPPORT_UPDATE_NOT_FOUND', 'Synthetic support update not found.'); return true; }
+      response.json({ attempt }); return true;
+    }
     const supportTransition = request.path.match(/^\/operations\/support-cases\/([^/]+)$/);
     if (supportTransition && request.method === 'POST') {
       const input = body(request); const status = String(input.status); const expectedVersion = Number(input.expectedVersion);
@@ -100,6 +108,13 @@ export function handleTestAccountRoute(request: Request, response: Response, sto
   }
   if (request.path === '/passports' && request.method === 'GET') { response.json({ passports: store.listPassports(account.id) }); return true; }
   if (request.path === '/support-cases' && request.method === 'GET') { response.json({ cases: store.listSupportCases(account.id), updates: store.listSupportUpdates(account.id) }); return true; }
+  if (request.path === '/notification-preferences' && request.method === 'GET') { response.json({ preference: store.getNotificationPreference(account.id) }); return true; }
+  if (request.path === '/notification-preferences' && request.method === 'POST') {
+    const input = body(request); const enabled = input.inAppEnabled; const expectedVersion = Number(input.expectedVersion);
+    if (typeof enabled !== 'boolean' || !Number.isInteger(expectedVersion) || expectedVersion < 1) { error(response, 400, 'INVALID_NOTIFICATION_PREFERENCE', 'Use a boolean preference and positive expected version.'); return true; }
+    const preference = store.setNotificationPreference(account.id, enabled, expectedVersion); if (preference === 'version_conflict') { error(response, 409, 'VERSION_CONFLICT', 'Preference changed; reload before retrying.'); return true; }
+    response.json({ preference }); return true;
+  }
   if (request.path === '/support-cases' && request.method === 'POST') {
     const input = body(request); const category = String(input.category) as SyntheticSupportCase['category']; const passportId = input.passportId ? String(input.passportId) : undefined;
     if (!['transfer_failed','arrival_help','refund_question'].includes(category)) { error(response, 400, 'INVALID_SUPPORT_CATEGORY', 'Choose a supported synthetic category.'); return true; }

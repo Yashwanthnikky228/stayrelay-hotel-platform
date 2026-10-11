@@ -6,7 +6,7 @@ Add a local-only support-case workflow for synthetic Reservation Passports. A si
 
 This workflow does not accept free-form sensitive data, submit a real claim, promise a refund, contact a hotel, move money, or unlock a transfer/arrival state. Hosted use remains disabled with `STAYRELAY_TEST_AUTH` unless a durable managed identity, database, private storage, and reviewed authorization model are configured.
 
-The customer Case updates feed projects the latest 100 saved support audit events, filtered by authenticated case owner. It exposes only event ID, case ID, constrained event name and UTC timestamp. It sends no email, SMS, push or webhook. External notification preferences and delivery adapters remain unfinished; no case transition implies an external message was sent.
+The customer Case updates feed projects the latest 100 saved support audit events, filtered by authenticated case owner. A versioned in-app preference and an operator-only disconnected delivery simulator cover queued, delivered and simulated-failed outcomes. It exposes only event ID, case ID, constrained event name and UTC timestamp. It sends no email, SMS, push or webhook; no case transition implies an external message was sent.
 
 ## Owned state and commands
 

@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import type { ReservationPassport, SyntheticSupportCase, SyntheticSupportUpdate } from '@stayrelay/domain';
+import type { ReservationPassport, SyntheticNotificationPreference, SyntheticSupportCase, SyntheticSupportUpdate } from '@stayrelay/domain';
 import { accountApi } from '../services/account';
 
 const labels: Record<SyntheticSupportCase['category'], string> = {
@@ -20,14 +20,15 @@ export default function SupportPage() {
   const [passportId, setPassportId] = useState('');
   const [message, setMessage] = useState('Checking your protected synthetic records…');
   const [saving, setSaving] = useState(false);
+  const [preference, setPreference] = useState<SyntheticNotificationPreference>();
 
   async function load() {
     setMessage('Checking your protected synthetic records…');
     try {
-      const [caseResult, passportResult] = await Promise.all([accountApi.supportCases(), accountApi.passports()]);
-      setCases(caseResult.cases); setUpdates(caseResult.updates); setPassports(passportResult.passports);
+      const [caseResult, passportResult, preferenceResult] = await Promise.all([accountApi.supportCases(), accountApi.passports(), accountApi.notificationPreference()]);
+      setCases(caseResult.cases); setUpdates(caseResult.updates); setPassports(passportResult.passports); setPreference(preferenceResult.preference);
       setMessage(caseResult.cases.length ? '' : 'No synthetic support cases yet.');
-    } catch { setCases(undefined); setUpdates([]); setMessage('Support cases are unavailable. Check your connection and sign in to the local demo, then retry. Hosted support remains disabled.'); }
+    } catch { setCases(undefined); setUpdates([]); setPreference(undefined); setMessage('Support cases are unavailable. Check your connection and sign in to the local demo, then retry. Hosted support remains disabled.'); }
   }
   useEffect(() => { void load(); }, []);
   async function submit(event: FormEvent) {
@@ -36,6 +37,11 @@ export default function SupportPage() {
     catch { setMessage('The case was not saved. No reservation, transfer, or money state changed.'); }
     finally { setSaving(false); }
   }
+  async function togglePreference() {
+    if (!preference) return;
+    try { const result = await accountApi.setNotificationPreference(!preference.inAppEnabled, preference.version); setPreference(result.preference); setMessage('Saved the synthetic in-app update preference.'); }
+    catch { setMessage('Preference changed or unavailable. Reload the server state before retrying.'); }
+  }
 
   return <section className="mx-auto max-w-3xl space-y-6">
     <div><p className="text-sm font-medium text-brand-700">Synthetic help workflow</p><h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">Support and recovery</h1><p className="mt-3 max-w-2xl leading-7 text-ink-600">Create a constrained test case for a simulated transfer, arrival, or refund question. Do not enter real booking, identity, payment, or health information.</p></div>
@@ -43,6 +49,7 @@ export default function SupportPage() {
     <p className="text-sm text-ink-600" role="status">{message}</p>
     {cases && <div className="space-y-4" aria-label="Your synthetic support cases">{cases.map((item) => <SupportCaseCard item={item} key={item.id} />)}</div>}
     {cases && <section className="rounded-card border border-divider bg-surface p-6" aria-labelledby="support-updates-title"><h2 id="support-updates-title" className="text-xl font-semibold">Case updates</h2><p className="mt-2 text-sm text-ink-600">Latest 100 saved demo updates. Email and SMS delivery are disabled.</p>{updates.length ? <ol className="mt-4 space-y-3">{updates.map((update) => <li key={update.id} className="rounded-control bg-canvas p-3 text-sm"><p className="font-semibold capitalize">Case {update.event}</p><p className="mt-1 break-all text-ink-600">{update.caseId}</p><time className="text-ink-600" dateTime={update.occurredAt}>{new Date(update.occurredAt).toLocaleString()}</time></li>)}</ol> : <p className="mt-4 text-sm">No saved updates yet.</p>}<button type="button" className="mt-4 min-h-11 rounded-control border border-divider px-4 text-sm font-semibold" onClick={() => void load()}>Refresh case updates</button></section>}
+    {cases && preference && <section className="rounded-card border border-divider bg-surface p-6" aria-labelledby="notification-preference-title"><h2 id="notification-preference-title" className="text-xl font-semibold">In-app update preference</h2><p className="mt-2 text-sm text-ink-600">Controls this local feed only. No email, SMS, push or webhook is sent.</p><button className="mt-4 min-h-11 rounded-control border border-divider px-4 text-sm font-semibold" type="button" onClick={() => void togglePreference()}>{preference.inAppEnabled ? 'Disable in-app updates' : 'Enable in-app updates'}</button><p className="mt-2 text-xs text-ink-600">Version {preference.version}</p></section>}
     {!cases && <button className="min-h-11 rounded-control border border-divider px-4 text-sm font-semibold" type="button" onClick={() => void load()}>Retry support service</button>}
   </section>;
 }

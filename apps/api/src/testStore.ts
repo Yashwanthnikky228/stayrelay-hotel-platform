@@ -2,7 +2,7 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import type { DemoReviewDecision, DemoReviewQueueItem, PropertyOffer, PropertySearchFilters, ReservationPassport, SellerReservationDraft, SyntheticAccount, SyntheticEvidenceMetadata, SyntheticOrder, SyntheticSupportCase, SyntheticSupportUpdate } from '@stayrelay/domain';
+import type { DemoReviewDecision, DemoReviewQueueItem, PropertyOffer, PropertySearchFilters, ReservationPassport, SellerReservationDraft, SyntheticAccount, SyntheticDeliveryAttempt, SyntheticEvidenceMetadata, SyntheticNotificationPreference, SyntheticOrder, SyntheticSupportCase, SyntheticSupportUpdate } from '@stayrelay/domain';
 
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
 
@@ -47,6 +47,8 @@ export class TestStore {
       CREATE TABLE IF NOT EXISTS reservation_passports (id TEXT PRIMARY KEY, order_id TEXT NOT NULL UNIQUE REFERENCES synthetic_orders(id), owner_id TEXT NOT NULL REFERENCES accounts(id), status TEXT NOT NULL CHECK(status = 'payment_confirmation_pending'), version INTEGER NOT NULL, status_updated_at TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS passport_state_events (id TEXT PRIMARY KEY, passport_id TEXT NOT NULL REFERENCES reservation_passports(id), status TEXT NOT NULL, version INTEGER NOT NULL, actor_id TEXT NOT NULL REFERENCES accounts(id), occurred_at TEXT NOT NULL, UNIQUE(passport_id, version));
       CREATE TABLE IF NOT EXISTS synthetic_support_cases (id TEXT PRIMARY KEY, owner_id TEXT NOT NULL REFERENCES accounts(id), passport_id TEXT REFERENCES reservation_passports(id), category TEXT NOT NULL CHECK(category IN ('transfer_failed','arrival_help','refund_question')), status TEXT NOT NULL CHECK(status IN ('open','escalated','resolved')), version INTEGER NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS synthetic_notification_preferences (owner_id TEXT PRIMARY KEY REFERENCES accounts(id), in_app_enabled INTEGER NOT NULL CHECK(in_app_enabled IN (0,1)), version INTEGER NOT NULL, updated_at TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS synthetic_delivery_attempts (id TEXT PRIMARY KEY, update_id TEXT NOT NULL REFERENCES audit_events(id), owner_id TEXT NOT NULL REFERENCES accounts(id), outcome TEXT NOT NULL CHECK(outcome IN ('queued','delivered','failed')), attempt INTEGER NOT NULL, version INTEGER NOT NULL, created_at TEXT NOT NULL, error_code TEXT);
     `);
     const auditColumns = (this.database.prepare('PRAGMA table_info(audit_events)').all() as unknown as { name: string }[]).map((column) => column.name);
     if (!auditColumns.includes('reason_code')) this.database.exec("ALTER TABLE audit_events ADD COLUMN reason_code TEXT NOT NULL DEFAULT 'legacy_event'");
@@ -266,6 +268,36 @@ export class TestStore {
       ORDER BY a.rowid DESC LIMIT 100
     `).all(ownerId) as unknown as { id: string; caseId: string; action: string; occurredAt: string }[];
     return rows.map(({ action, ...row }) => ({ ...row, event: action.slice('support_case.'.length) as SyntheticSupportUpdate['event'] }));
+  }
+
+  getNotificationPreference(ownerId: string): SyntheticNotificationPreference {
+    const row = this.database.prepare('SELECT * FROM synthetic_notification_preferences WHERE owner_id = ?').get(ownerId) as { owner_id: string; in_app_enabled: number; version: number; updated_at: string } | undefined;
+    if (row) return { ownerId: row.owner_id, inAppEnabled: Boolean(row.in_app_enabled), version: row.version, updatedAt: row.updated_at };
+    const timestamp = now();
+    this.database.prepare('INSERT INTO synthetic_notification_preferences (owner_id, in_app_enabled, version, updated_at) VALUES (?, ?, ?, ?)').run(ownerId, 1, 1, timestamp);
+    return { ownerId, inAppEnabled: true, version: 1, updatedAt: timestamp };
+  }
+
+  setNotificationPreference(ownerId: string, inAppEnabled: boolean, expectedVersion: number): SyntheticNotificationPreference | 'version_conflict' {
+    const current = this.getNotificationPreference(ownerId);
+    if (current.version !== expectedVersion) return 'version_conflict';
+    const updatedAt = now(); const version = current.version + 1;
+    const changed = this.database.prepare('UPDATE synthetic_notification_preferences SET in_app_enabled = ?, version = ?, updated_at = ? WHERE owner_id = ? AND version = ?').run(inAppEnabled ? 1 : 0, version, updatedAt, ownerId, expectedVersion);
+    if (!changed.changes) return 'version_conflict';
+    this.audit(ownerId, 'notification.preference_changed', 'notification_preference', ownerId);
+    return { ownerId, inAppEnabled, version, updatedAt };
+  }
+
+  recordDeliveryAttempt(operatorId: string, updateId: string, outcome: SyntheticDeliveryAttempt['outcome']): SyntheticDeliveryAttempt | 'not_found' {
+    const update = this.database.prepare("SELECT target_id AS case_id FROM audit_events WHERE id = ? AND target_type = 'synthetic_support_case'").get(updateId) as { case_id: string } | undefined;
+    if (!update) return 'not_found';
+    const owner = this.database.prepare('SELECT owner_id FROM synthetic_support_cases WHERE id = ?').get(update.case_id) as { owner_id: string } | undefined;
+    if (!owner) return 'not_found';
+    const prior = this.database.prepare('SELECT COUNT(*) AS count FROM synthetic_delivery_attempts WHERE update_id = ?').get(updateId) as { count: number };
+    const timestamp = now(); const attempt: SyntheticDeliveryAttempt = { id: randomUUID(), updateId, ownerId: owner.owner_id, outcome, attempt: Number(prior.count) + 1, version: Number(prior.count) + 1, createdAt: timestamp, ...(outcome === 'failed' ? { errorCode: 'DELIVERY_SIMULATED_FAILURE' as const } : {}) };
+    this.database.prepare('INSERT INTO synthetic_delivery_attempts (id, update_id, owner_id, outcome, attempt, version, created_at, error_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(attempt.id, updateId, owner.owner_id, outcome, attempt.attempt, attempt.version, timestamp, attempt.errorCode ?? null);
+    this.audit(operatorId, `notification.delivery_${outcome}`, 'synthetic_delivery_attempt', attempt.id);
+    return attempt;
   }
 
   private supportTransaction<T>(command: () => T): T {

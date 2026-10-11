@@ -10,6 +10,7 @@ Date: 2026-10-11. Environment: isolated local SQLite/Express and Chromium. Exter
 - Browser: create synthetic account and case, operator escalate/resolve, customer refresh and see all three events. Aborting the refresh request clears the feed and exposes retry.
 - Chromium reflow: viewport/scroll widths 320/320, 768/768 and 1280/1280. Screenshot: `/workspace/stayrelay-support-feed.png` (session artifact).
 - `pnpm test:unit`: 22 passed, zero failed/skipped. `pnpm build`: strict typecheck and customer/operations production builds passed.
+- The versioned in-app preference and disconnected delivery simulator are also covered: customers can toggle the local feed, while operators can record queued, delivered or simulated-failed attempts. Stale preference writes, unknown update IDs, customer delivery attempts and invalid outcomes fail closed. The 390px preference browser check passed; screenshot: `/workspace/stayrelay-notification-preference.png`.
 - Build budget: customer entry 214.70 kB < 250 KiB; shared CSS 21.79 kB < 30 KiB; support route 5.18 kB. These are local bundle checks, not hosted Web Vitals.
 
 ## Operator and recovery guide
@@ -22,4 +23,4 @@ To disable the entire local workflow, unset `STAYRELAY_TEST_AUTH` and restart th
 
 ## Privacy and remaining work
 
-The feed is an authenticated operational projection, not analytics or externally delivered messaging. No tracking transport is configured. Tests assert its exact field allowlist and cross-account exclusion. External notifications, preferences, delivery retries, hosted persistence and independent review remain unfinished. The Part 19 acceptance review must retain those gaps. This evidence does not certify the public website or change its deployment.
+The feed is an authenticated operational projection, not analytics or externally delivered messaging. No tracking transport is configured. Tests assert its exact field allowlist and cross-account exclusion. External email, SMS, push and webhook delivery, hosted persistence and independent review remain unfinished. This evidence does not certify the public website or change its deployment.

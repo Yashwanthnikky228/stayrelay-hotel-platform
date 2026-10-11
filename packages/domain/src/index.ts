@@ -192,6 +192,24 @@ export interface SyntheticSupportUpdate {
   occurredAt: ISODateTime;
 }
 
+export interface SyntheticNotificationPreference {
+  ownerId: EntityId;
+  inAppEnabled: boolean;
+  version: number;
+  updatedAt: ISODateTime;
+}
+
+export interface SyntheticDeliveryAttempt {
+  id: EntityId;
+  updateId: EntityId;
+  ownerId: EntityId;
+  outcome: 'queued' | 'delivered' | 'failed';
+  attempt: number;
+  version: number;
+  createdAt: ISODateTime;
+  errorCode?: 'DELIVERY_SIMULATED_FAILURE';
+}
+
 export interface SyntheticSupportCase {
   id: EntityId;
   ownerId: EntityId;
