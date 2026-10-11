@@ -1,4 +1,4 @@
-import type { ReservationPassport, SellerReservationDraft, SyntheticAccount, SyntheticEvidenceMetadata, SyntheticNotificationPreference, SyntheticOrder, SyntheticSupportCase, SyntheticSupportUpdate } from '@stayrelay/domain';
+import type { ReservationPassport, SellerReservationDraft, SyntheticAccount, SyntheticEvidenceMetadata, SyntheticNotificationPreference, SyntheticOrder, SyntheticRecoveryCase, SyntheticRecoveryRequestType, SyntheticSupportCase, SyntheticSupportUpdate } from '@stayrelay/domain';
 
 export class AccountApiError extends Error {
   constructor(message: string, readonly status: number, readonly code?: string) { super(message); }
@@ -33,4 +33,6 @@ export const accountApi = {
   createSupportCase: (category: SyntheticSupportCase['category'], passportId?: string) => request<{ case: SyntheticSupportCase }>('/support-cases', { method: 'POST', body: JSON.stringify({ category, passportId }) }),
   notificationPreference: () => request<{ preference: SyntheticNotificationPreference }>('/notification-preferences'),
   setNotificationPreference: (inAppEnabled: boolean, expectedVersion: number) => request<{ preference: SyntheticNotificationPreference }>('/notification-preferences', { method: 'POST', body: JSON.stringify({ inAppEnabled, expectedVersion }) }),
+  recoveryCases: () => request<{ cases: SyntheticRecoveryCase[] }>('/recovery-cases'),
+  createRecoveryCase: (input: { passportId: string; requestType: SyntheticRecoveryRequestType; reason: string; explanation: string }) => request<{ case: SyntheticRecoveryCase }>('/recovery-cases', { method: 'POST', body: JSON.stringify(input) }),
 };

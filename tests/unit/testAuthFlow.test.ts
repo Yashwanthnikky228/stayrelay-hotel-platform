@@ -165,6 +165,26 @@ test('support cases stay owner-scoped and use protected version-checked recovery
   assert.equal((await json(`/operations/support-updates/${updateId}/delivery`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ outcome: 'bogus' }) })).response.status, 400);
 });
 
+test('buyer recovery case is owner-scoped, operator-reviewed, audited and never charges money', async () => {
+  const buyer = await json('/test-auth/session', { method: 'POST', body: JSON.stringify({ email: 'buyer-one@example.test' }) }); const buyerCookie = buyer.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(buyerCookie);
+  const passport = ((await json('/passports', { headers: { cookie: buyerCookie } })).body?.passports as { id: string }[])[0]; assert.ok(passport);
+  const created = await json('/recovery-cases', { method: 'POST', headers: { cookie: buyerCookie }, body: JSON.stringify({ passportId: passport.id, requestType: 'refund_review', reason: 'Synthetic refund review', explanation: 'DEMO ONLY. No real payment was made.' }) });
+  assert.equal(created.response.status, 201); let recovery = created.body?.case as { id: string; status: string; version: number }; assert.equal(recovery.status, 'submitted'); assert.equal(recovery.version, 1);
+  assert.equal((await json('/recovery-cases', { headers: { cookie: buyerCookie } })).response.status, 200);
+  const other = await json('/test-auth/session', { method: 'POST', body: JSON.stringify({ email: 'seller-two@example.test' }) }); const otherCookie = other.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(otherCookie);
+  assert.deepEqual((await json('/recovery-cases', { headers: { cookie: otherCookie } })).body?.cases, []);
+  assert.equal((await json('/recovery-cases', { method: 'POST', headers: { cookie: otherCookie }, body: JSON.stringify({ passportId: passport.id, requestType: 'cancellation', reason: 'other', explanation: 'no' }) })).response.status, 404);
+  const operator = await json('/test-auth/operator-session', { method: 'POST', body: JSON.stringify({ email: 'operator@stayrelay.test' }) }); const operatorCookie = operator.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(operatorCookie);
+  const queue = await json('/operations/recovery-cases', { headers: { cookie: operatorCookie } }); assert.equal((queue.body?.cases as unknown[]).length, 1);
+  const review = await json(`/operations/recovery-cases/${recovery.id}`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ status: 'under_review', expectedVersion: 1 }) }); assert.equal(review.response.status, 200); recovery = review.body?.case as typeof recovery;
+  assert.equal((await json(`/operations/recovery-cases/${recovery.id}`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ status: 'approved_synthetic_refund', expectedVersion: 2 }) })).response.status, 409);
+  const pending = await json(`/operations/recovery-cases/${recovery.id}`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ status: 'recovery_pending', expectedVersion: 2 }) }); assert.equal(pending.response.status, 200); recovery = pending.body?.case as typeof recovery;
+  const approved = await json(`/operations/recovery-cases/${recovery.id}`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ status: 'approved_synthetic_refund', expectedVersion: recovery.version }) }); assert.equal(approved.response.status, 200);
+  const seller = await json('/test-auth/session', { method: 'POST', body: JSON.stringify({ email: 'seller-one@example.test' }) }); const sellerCookie = seller.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(sellerCookie);
+  assert.equal(((await json('/recovery-cases', { headers: { cookie: sellerCookie } })).body?.cases as unknown[]).length, 1);
+  assert.equal((await json('/operations/recovery-cases', { headers: { cookie: buyerCookie } })).response.status, 403);
+});
+
 test('audit records carry actor, reason, correlation, target and timestamp without document content', () => {
   const store = new TestStore(':memory:'); const account = store.createAccount('audit@example.test', 'Demo Audit User'); assert.ok(account);
   const row = store.database.prepare('SELECT actor_id, action, reason_code, correlation_id, target_type, target_id, occurred_at FROM audit_events ORDER BY occurred_at DESC LIMIT 1').get() as Record<string, string>;

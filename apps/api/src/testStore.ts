@@ -2,7 +2,7 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import type { DemoReviewDecision, DemoReviewQueueItem, PropertyOffer, PropertySearchFilters, ReservationPassport, SellerReservationDraft, SyntheticAccount, SyntheticDeliveryAttempt, SyntheticEvidenceMetadata, SyntheticNotificationPreference, SyntheticOrder, SyntheticSupportCase, SyntheticSupportUpdate } from '@stayrelay/domain';
+import type { DemoReviewDecision, DemoReviewQueueItem, PropertyOffer, PropertySearchFilters, ReservationPassport, SellerReservationDraft, SyntheticAccount, SyntheticDeliveryAttempt, SyntheticEvidenceMetadata, SyntheticNotificationPreference, SyntheticOrder, SyntheticRecoveryCase, SyntheticRecoveryRequestType, SyntheticRecoveryStatus, SyntheticSupportCase, SyntheticSupportUpdate } from '@stayrelay/domain';
 
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
 
@@ -49,6 +49,7 @@ export class TestStore {
       CREATE TABLE IF NOT EXISTS synthetic_support_cases (id TEXT PRIMARY KEY, owner_id TEXT NOT NULL REFERENCES accounts(id), passport_id TEXT REFERENCES reservation_passports(id), category TEXT NOT NULL CHECK(category IN ('transfer_failed','arrival_help','refund_question')), status TEXT NOT NULL CHECK(status IN ('open','escalated','resolved')), version INTEGER NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS synthetic_notification_preferences (owner_id TEXT PRIMARY KEY REFERENCES accounts(id), in_app_enabled INTEGER NOT NULL CHECK(in_app_enabled IN (0,1)), version INTEGER NOT NULL, updated_at TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS synthetic_delivery_attempts (id TEXT PRIMARY KEY, update_id TEXT NOT NULL REFERENCES audit_events(id), owner_id TEXT NOT NULL REFERENCES accounts(id), outcome TEXT NOT NULL CHECK(outcome IN ('queued','delivered','failed')), attempt INTEGER NOT NULL, version INTEGER NOT NULL, created_at TEXT NOT NULL, error_code TEXT);
+      CREATE TABLE IF NOT EXISTS synthetic_recovery_cases (id TEXT PRIMARY KEY, buyer_id TEXT NOT NULL REFERENCES accounts(id), seller_id TEXT NOT NULL REFERENCES accounts(id), order_id TEXT NOT NULL UNIQUE REFERENCES synthetic_orders(id), passport_id TEXT NOT NULL UNIQUE REFERENCES reservation_passports(id), request_type TEXT NOT NULL CHECK(request_type IN ('cancellation','refund_review','transfer_failure','arrival_issue','seller_payout_hold','evidence_dispute')), reason TEXT NOT NULL, explanation TEXT NOT NULL, status TEXT NOT NULL CHECK(status IN ('draft','submitted','under_review','waiting_for_user','recovery_pending','approved_synthetic_refund','rejected','closed')), version INTEGER NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
     `);
     const auditColumns = (this.database.prepare('PRAGMA table_info(audit_events)').all() as unknown as { name: string }[]).map((column) => column.name);
     if (!auditColumns.includes('reason_code')) this.database.exec("ALTER TABLE audit_events ADD COLUMN reason_code TEXT NOT NULL DEFAULT 'legacy_event'");
@@ -240,6 +241,29 @@ export class TestStore {
       this.database.prepare('INSERT INTO synthetic_support_cases (id, owner_id, passport_id, category, status, version, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(item.id, ownerId, passportId ?? null, category, item.status, item.version, timestamp, timestamp);
       this.audit(ownerId, 'support_case.created', 'synthetic_support_case', item.id); return item;
     });
+  }
+
+  createRecoveryCase(buyerId: string, passportId: string, requestType: SyntheticRecoveryRequestType, reason: string, explanation: string): SyntheticRecoveryCase | 'passport_not_found' | 'exists' {
+    const row = this.database.prepare('SELECT p.id AS passport_id, p.order_id, d.owner_id AS seller_id FROM reservation_passports p JOIN synthetic_orders o ON o.id = p.order_id JOIN seller_drafts d ON d.id = o.draft_id WHERE p.id = ? AND p.owner_id = ?').get(passportId, buyerId) as { passport_id: string; order_id: string; seller_id: string } | undefined;
+    if (!row) return 'passport_not_found';
+    if (this.database.prepare('SELECT id FROM synthetic_recovery_cases WHERE passport_id = ?').get(passportId)) return 'exists';
+    const timestamp = now(); const item: SyntheticRecoveryCase = { id: randomUUID(), buyerId, sellerId: row.seller_id, orderId: row.order_id, passportId, requestType, reason, explanation, status: 'submitted', version: 1, createdAt: timestamp, updatedAt: timestamp };
+    this.database.exec('BEGIN');
+    try { this.database.prepare('INSERT INTO synthetic_recovery_cases (id,buyer_id,seller_id,order_id,passport_id,request_type,reason,explanation,status,version,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)').run(item.id,item.buyerId,item.sellerId,item.orderId,item.passportId,item.requestType,item.reason,item.explanation,item.status,item.version,timestamp,timestamp); this.audit(buyerId, 'recovery_case.submitted', 'synthetic_recovery_case', item.id); this.database.exec('COMMIT'); return item; } catch (error) { this.database.exec('ROLLBACK'); throw error; }
+  }
+
+  listRecoveryCases(accountId?: string): SyntheticRecoveryCase[] {
+    const query = accountId ? 'SELECT * FROM synthetic_recovery_cases WHERE buyer_id = ? OR seller_id = ? ORDER BY created_at DESC' : 'SELECT * FROM synthetic_recovery_cases ORDER BY created_at DESC';
+    const rows = (accountId ? this.database.prepare(query).all(accountId, accountId) : this.database.prepare(query).all()) as unknown as Record<string, unknown>[];
+    return rows.map((row) => ({ id: String(row.id), buyerId: String(row.buyer_id), sellerId: String(row.seller_id), orderId: String(row.order_id), passportId: String(row.passport_id), requestType: row.request_type as SyntheticRecoveryRequestType, reason: String(row.reason), explanation: String(row.explanation), status: row.status as SyntheticRecoveryStatus, version: Number(row.version), createdAt: String(row.created_at), updatedAt: String(row.updated_at) }));
+  }
+
+  transitionRecoveryCase(operatorId: string, caseId: string, status: SyntheticRecoveryStatus, expectedVersion: number): SyntheticRecoveryCase | 'not_found' | 'version_conflict' | 'invalid_transition' {
+    const item = this.listRecoveryCases().find((candidate) => candidate.id === caseId); if (!item) return 'not_found';
+    const allowed: Record<SyntheticRecoveryStatus, SyntheticRecoveryStatus[]> = { submitted: ['under_review'], under_review: ['waiting_for_user','recovery_pending','rejected'], waiting_for_user: ['under_review','closed'], recovery_pending: ['approved_synthetic_refund','rejected'], approved_synthetic_refund: ['closed'], draft: [], rejected: ['closed'], closed: [] };
+    if (item.version !== expectedVersion) return 'version_conflict'; if (!allowed[item.status].includes(status)) return 'invalid_transition';
+    const updatedAt = now(); const version = item.version + 1; const changed = this.database.prepare('UPDATE synthetic_recovery_cases SET status = ?, version = ?, updated_at = ? WHERE id = ? AND version = ?').run(status, version, updatedAt, caseId, expectedVersion); if (!changed.changes) return 'version_conflict';
+    this.audit(operatorId, `recovery_case.${status}`, 'synthetic_recovery_case', caseId); return { ...item, status, version, updatedAt };
   }
 
   listSupportCases(ownerId?: string): SyntheticSupportCase[] {

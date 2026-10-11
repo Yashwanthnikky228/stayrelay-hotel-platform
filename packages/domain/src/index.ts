@@ -199,6 +199,24 @@ export interface SyntheticNotificationPreference {
   updatedAt: ISODateTime;
 }
 
+export type SyntheticRecoveryRequestType = 'cancellation' | 'refund_review' | 'transfer_failure' | 'arrival_issue' | 'seller_payout_hold' | 'evidence_dispute';
+export type SyntheticRecoveryStatus = 'draft' | 'submitted' | 'under_review' | 'waiting_for_user' | 'recovery_pending' | 'approved_synthetic_refund' | 'rejected' | 'closed';
+
+export interface SyntheticRecoveryCase {
+  id: EntityId;
+  buyerId: EntityId;
+  sellerId: EntityId;
+  orderId: EntityId;
+  passportId: EntityId;
+  requestType: SyntheticRecoveryRequestType;
+  reason: string;
+  explanation: string;
+  status: SyntheticRecoveryStatus;
+  version: number;
+  createdAt: ISODateTime;
+  updatedAt: ISODateTime;
+}
+
 export interface SyntheticDeliveryAttempt {
   id: EntityId;
   updateId: EntityId;
