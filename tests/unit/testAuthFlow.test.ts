@@ -173,7 +173,16 @@ test('support cases stay owner-scoped and use protected version-checked recovery
 test('buyer recovery case is owner-scoped, operator-reviewed, audited and never charges money', async () => {
   const buyer = await json('/test-auth/session', { method: 'POST', body: JSON.stringify({ email: 'buyer-one@example.test' }) }); const buyerCookie = buyer.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(buyerCookie);
   const passport = ((await json('/passports', { headers: { cookie: buyerCookie } })).body?.passports as { id: string }[])[0]; assert.ok(passport);
-  const created = await json('/recovery-cases', { method: 'POST', headers: { cookie: buyerCookie }, body: JSON.stringify({ passportId: passport.id, requestType: 'refund_review', reason: 'Synthetic refund review', explanation: 'DEMO ONLY. No real payment was made.' }) });
+  const valid = { passportId: passport.id, requestType: 'refund_review', reason: 'Synthetic refund review', explanation: 'DEMO ONLY. No real payment was made.' };
+  for (const field of Object.keys(valid)) {
+    for (const value of [null, 42, true, [], { text: 'not a string' }]) {
+      const rejected = await json('/recovery-cases', { method: 'POST', headers: { cookie: buyerCookie }, body: JSON.stringify({ ...valid, [field]: value }) });
+      assert.equal(rejected.response.status, 400, `${field} rejects ${JSON.stringify(value)}`);
+      assert.equal((rejected.body?.error as { code: string }).code, 'INVALID_RECOVERY_CASE');
+    }
+  }
+  assert.deepEqual((await json('/recovery-cases', { headers: { cookie: buyerCookie } })).body?.cases, []);
+  const created = await json('/recovery-cases', { method: 'POST', headers: { cookie: buyerCookie }, body: JSON.stringify(valid) });
   assert.equal(created.response.status, 201); let recovery = created.body?.case as { id: string; status: string; version: number }; assert.equal(recovery.status, 'submitted'); assert.equal(recovery.version, 1);
   assert.equal((await json('/recovery-cases', { headers: { cookie: buyerCookie } })).response.status, 200);
   const other = await json('/test-auth/session', { method: 'POST', body: JSON.stringify({ email: 'seller-two@example.test' }) }); const otherCookie = other.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(otherCookie);

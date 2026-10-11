@@ -124,6 +124,10 @@ export function handleTestAccountRoute(request: Request, response: Response, sto
   }
   if (request.path === '/recovery-cases' && request.method === 'GET') { response.json({ cases: store.listRecoveryCases(account.id) }); return true; }
   if (request.path === '/recovery-cases' && request.method === 'POST') {
+    const fields = body(request);
+    if (['passportId', 'requestType', 'reason', 'explanation'].some((key) => typeof fields[key] !== 'string')) {
+      error(response, 400, 'INVALID_RECOVERY_CASE', 'Recovery fields must be text values.'); return true;
+    }
     const input = body(request); const passportId = String(input.passportId ?? ''); const requestType = String(input.requestType) as SyntheticRecoveryRequestType; const reason = String(input.reason ?? '').trim(); const explanation = String(input.explanation ?? '').trim();
     if (!passportId || !['cancellation','refund_review','transfer_failure','arrival_issue','seller_payout_hold','evidence_dispute'].includes(requestType) || !reason || reason.length > 120 || !explanation || explanation.length > 1000) { error(response, 400, 'INVALID_RECOVERY_CASE', 'Use an owned Passport, supported request type, bounded reason and explanation.'); return true; }
     const result = store.createRecoveryCase(account.id, passportId, requestType, reason, explanation); if (result === 'passport_not_found') { error(response, 404, 'PASSPORT_NOT_FOUND', 'Owned Reservation Passport not found.'); return true; } if (result === 'exists') { error(response, 409, 'RECOVERY_CASE_EXISTS', 'A recovery case already exists for this Passport.'); return true; }
