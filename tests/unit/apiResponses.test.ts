@@ -3,12 +3,15 @@ import { once } from 'node:events';
 import { test } from 'node:test';
 import type { AddressInfo } from 'node:net';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { app } from '../../apps/api/src/app';
+import { createApp } from '../../apps/api/src/app';
+import { TestStore } from '../../apps/api/src/testStore';
 import healthHandler from '../../api/health';
 import propertiesHandler from '../../api/properties';
 import notFoundHandler from '../../api/not-found';
 
 test('local API keeps inventory unavailable and refuses unsupported methods', async (context) => {
+  const store = new TestStore(':memory:');
+  const app = createApp({ store, testAuthEnabled: false });
   const server = app.listen(0, '127.0.0.1');
   context.after(() => new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve())));
   await once(server, 'listening');

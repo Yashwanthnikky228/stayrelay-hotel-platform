@@ -2,7 +2,7 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import type { DemoReviewDecision, DemoReviewQueueItem, PropertyOffer, PropertySearchFilters, ReservationPassport, SellerReservationDraft, SyntheticAccount, SyntheticEvidenceMetadata, SyntheticOrder } from '@stayrelay/domain';
+import type { DemoReviewDecision, DemoReviewQueueItem, PropertyOffer, PropertySearchFilters, ReservationPassport, SellerReservationDraft, SyntheticAccount, SyntheticDeliveryAttempt, SyntheticEvidenceMetadata, SyntheticNotificationPreference, SyntheticOrder, SyntheticRecoveryCase, SyntheticRecoveryRequestType, SyntheticRecoveryStatus, SyntheticSupportCase, SyntheticSupportUpdate } from '@stayrelay/domain';
 
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
 
@@ -46,6 +46,10 @@ export class TestStore {
       CREATE TABLE IF NOT EXISTS synthetic_orders (id TEXT PRIMARY KEY, buyer_id TEXT NOT NULL REFERENCES accounts(id), draft_id TEXT NOT NULL REFERENCES seller_drafts(id), status TEXT NOT NULL CHECK(status = 'confirmation_pending'), created_at TEXT NOT NULL, UNIQUE(buyer_id, draft_id));
       CREATE TABLE IF NOT EXISTS reservation_passports (id TEXT PRIMARY KEY, order_id TEXT NOT NULL UNIQUE REFERENCES synthetic_orders(id), owner_id TEXT NOT NULL REFERENCES accounts(id), status TEXT NOT NULL CHECK(status = 'payment_confirmation_pending'), version INTEGER NOT NULL, status_updated_at TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS passport_state_events (id TEXT PRIMARY KEY, passport_id TEXT NOT NULL REFERENCES reservation_passports(id), status TEXT NOT NULL, version INTEGER NOT NULL, actor_id TEXT NOT NULL REFERENCES accounts(id), occurred_at TEXT NOT NULL, UNIQUE(passport_id, version));
+      CREATE TABLE IF NOT EXISTS synthetic_support_cases (id TEXT PRIMARY KEY, owner_id TEXT NOT NULL REFERENCES accounts(id), passport_id TEXT REFERENCES reservation_passports(id), category TEXT NOT NULL CHECK(category IN ('transfer_failed','arrival_help','refund_question')), status TEXT NOT NULL CHECK(status IN ('open','escalated','resolved')), version INTEGER NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS synthetic_notification_preferences (owner_id TEXT PRIMARY KEY REFERENCES accounts(id), in_app_enabled INTEGER NOT NULL CHECK(in_app_enabled IN (0,1)), version INTEGER NOT NULL, updated_at TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS synthetic_delivery_attempts (id TEXT PRIMARY KEY, update_id TEXT NOT NULL REFERENCES audit_events(id), owner_id TEXT NOT NULL REFERENCES accounts(id), outcome TEXT NOT NULL CHECK(outcome IN ('queued','delivered','failed')), attempt INTEGER NOT NULL, version INTEGER NOT NULL, created_at TEXT NOT NULL, error_code TEXT);
+      CREATE TABLE IF NOT EXISTS synthetic_recovery_cases (id TEXT PRIMARY KEY, buyer_id TEXT NOT NULL REFERENCES accounts(id), seller_id TEXT NOT NULL REFERENCES accounts(id), order_id TEXT NOT NULL UNIQUE REFERENCES synthetic_orders(id), passport_id TEXT NOT NULL UNIQUE REFERENCES reservation_passports(id), request_type TEXT NOT NULL CHECK(request_type IN ('cancellation','refund_review','transfer_failure','arrival_issue','seller_payout_hold','evidence_dispute')), reason TEXT NOT NULL, explanation TEXT NOT NULL, status TEXT NOT NULL CHECK(status IN ('draft','submitted','under_review','waiting_for_user','recovery_pending','approved_synthetic_refund','rejected','closed')), version INTEGER NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
     `);
     const auditColumns = (this.database.prepare('PRAGMA table_info(audit_events)').all() as unknown as { name: string }[]).map((column) => column.name);
     if (!auditColumns.includes('reason_code')) this.database.exec("ALTER TABLE audit_events ADD COLUMN reason_code TEXT NOT NULL DEFAULT 'legacy_event'");
@@ -228,6 +232,117 @@ export class TestStore {
     }
     this.audit(operatorId, `passport.${action}`, 'reservation_passport', passportId);
     return { ...current, status: nextStatus, version, statusUpdatedAt: occurredAt, nextAction: nextStatus === 'checked_in' ? undefined : { label: 'Continue the synthetic operations simulation', owner: 'stayrelay_operations' }, arrivalGuideAvailable: nextStatus === 'ready_for_arrival' || nextStatus === 'checked_in' };
+  }
+
+  createSupportCase(ownerId: string, category: SyntheticSupportCase['category'], passportId?: string): SyntheticSupportCase | 'passport_not_found' {
+    if (passportId && !this.listPassports(ownerId).some((passport) => passport.id === passportId)) return 'passport_not_found';
+    const timestamp = now(); const item: SyntheticSupportCase = { id: randomUUID(), ownerId, ...(passportId ? { passportId } : {}), category, status: 'open', version: 1, createdAt: timestamp, updatedAt: timestamp };
+    return this.supportTransaction(() => {
+      this.database.prepare('INSERT INTO synthetic_support_cases (id, owner_id, passport_id, category, status, version, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(item.id, ownerId, passportId ?? null, category, item.status, item.version, timestamp, timestamp);
+      this.audit(ownerId, 'support_case.created', 'synthetic_support_case', item.id); return item;
+    });
+  }
+
+  createRecoveryCase(buyerId: string, passportId: string, requestType: SyntheticRecoveryRequestType, reason: string, explanation: string): SyntheticRecoveryCase | 'passport_not_found' | 'exists' {
+    const row = this.database.prepare('SELECT p.id AS passport_id, p.order_id, d.owner_id AS seller_id FROM reservation_passports p JOIN synthetic_orders o ON o.id = p.order_id JOIN seller_drafts d ON d.id = o.draft_id WHERE p.id = ? AND p.owner_id = ?').get(passportId, buyerId) as { passport_id: string; order_id: string; seller_id: string } | undefined;
+    if (!row) return 'passport_not_found';
+    if (this.database.prepare('SELECT id FROM synthetic_recovery_cases WHERE passport_id = ?').get(passportId)) return 'exists';
+    const timestamp = now(); const item: SyntheticRecoveryCase = { id: randomUUID(), buyerId, sellerId: row.seller_id, orderId: row.order_id, passportId, requestType, reason, explanation, status: 'submitted', version: 1, createdAt: timestamp, updatedAt: timestamp };
+    this.database.exec('BEGIN');
+    try { this.database.prepare('INSERT INTO synthetic_recovery_cases (id,buyer_id,seller_id,order_id,passport_id,request_type,reason,explanation,status,version,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)').run(item.id,item.buyerId,item.sellerId,item.orderId,item.passportId,item.requestType,item.reason,item.explanation,item.status,item.version,timestamp,timestamp); this.audit(buyerId, 'recovery_case.submitted', 'synthetic_recovery_case', item.id); this.database.exec('COMMIT'); return item; } catch (error) { this.database.exec('ROLLBACK'); throw error; }
+  }
+
+  listRecoveryCases(accountId?: string): SyntheticRecoveryCase[] {
+    const query = accountId ? 'SELECT * FROM synthetic_recovery_cases WHERE buyer_id = ? OR seller_id = ? ORDER BY created_at DESC' : 'SELECT * FROM synthetic_recovery_cases ORDER BY created_at DESC';
+    const rows = (accountId ? this.database.prepare(query).all(accountId, accountId) : this.database.prepare(query).all()) as unknown as Record<string, unknown>[];
+    return rows.map((row) => ({ id: String(row.id), buyerId: String(row.buyer_id), sellerId: String(row.seller_id), orderId: String(row.order_id), passportId: String(row.passport_id), requestType: row.request_type as SyntheticRecoveryRequestType, reason: String(row.reason), explanation: String(row.explanation), status: row.status as SyntheticRecoveryStatus, version: Number(row.version), createdAt: String(row.created_at), updatedAt: String(row.updated_at) }));
+  }
+
+  transitionRecoveryCase(operatorId: string, caseId: string, status: SyntheticRecoveryStatus, expectedVersion: number): SyntheticRecoveryCase | 'not_found' | 'version_conflict' | 'invalid_transition' {
+    const item = this.listRecoveryCases().find((candidate) => candidate.id === caseId); if (!item) return 'not_found';
+    const allowed: Record<SyntheticRecoveryStatus, SyntheticRecoveryStatus[]> = { submitted: ['under_review'], under_review: ['waiting_for_user','recovery_pending','rejected'], waiting_for_user: ['under_review','closed'], recovery_pending: ['approved_synthetic_refund','rejected'], approved_synthetic_refund: ['closed'], draft: [], rejected: ['closed'], closed: [] };
+    if (item.version !== expectedVersion) return 'version_conflict'; if (!allowed[item.status].includes(status)) return 'invalid_transition';
+    return this.supportTransaction(() => {
+      const updatedAt = now(); const version = item.version + 1;
+      const changed = this.database.prepare('UPDATE synthetic_recovery_cases SET status = ?, version = ?, updated_at = ? WHERE id = ? AND version = ?').run(status, version, updatedAt, caseId, expectedVersion);
+      if (!changed.changes) return 'version_conflict';
+      this.audit(operatorId, `recovery_case.${status}`, 'synthetic_recovery_case', caseId);
+      return { ...item, status, version, updatedAt };
+    });
+  }
+
+  listSupportCases(ownerId?: string): SyntheticSupportCase[] {
+    const rows = (ownerId ? this.database.prepare('SELECT * FROM synthetic_support_cases WHERE owner_id = ? ORDER BY created_at DESC').all(ownerId) : this.database.prepare('SELECT * FROM synthetic_support_cases ORDER BY created_at DESC').all()) as unknown as { id: string; owner_id: string; passport_id: string | null; category: SyntheticSupportCase['category']; status: SyntheticSupportCase['status']; version: number; created_at: string; updated_at: string }[];
+    return rows.map((row) => ({ id: row.id, ownerId: row.owner_id, ...(row.passport_id ? { passportId: row.passport_id } : {}), category: row.category, status: row.status, version: row.version, createdAt: row.created_at, updatedAt: row.updated_at }));
+  }
+
+  transitionSupportCase(operatorId: string, caseId: string, status: 'escalated' | 'resolved', expectedVersion: number): SyntheticSupportCase | 'not_found' | 'version_conflict' {
+    const item = this.listSupportCases().find((candidate) => candidate.id === caseId); if (!item) return 'not_found';
+    if (item.version !== expectedVersion || item.status === 'resolved' || (item.status === 'escalated' && status === 'escalated')) return 'version_conflict';
+    const version = item.version + 1; const updatedAt = now();
+    return this.supportTransaction(() => {
+      const changed = this.database.prepare('UPDATE synthetic_support_cases SET status = ?, version = ?, updated_at = ? WHERE id = ? AND version = ?').run(status, version, updatedAt, caseId, expectedVersion);
+      if (!changed.changes) return 'version_conflict';
+      this.audit(operatorId, `support_case.${status}`, 'synthetic_support_case', caseId);
+      return { ...item, status, version, updatedAt };
+    });
+  }
+
+  listSupportUpdates(ownerId: string): SyntheticSupportUpdate[] {
+    const rows = this.database.prepare(`
+      SELECT a.id, a.target_id AS caseId, a.action, a.occurred_at AS occurredAt
+      FROM audit_events a JOIN synthetic_support_cases c ON c.id = a.target_id
+      WHERE c.owner_id = ? AND a.target_type = 'synthetic_support_case'
+        AND a.action IN ('support_case.created', 'support_case.escalated', 'support_case.resolved')
+      ORDER BY a.rowid DESC LIMIT 100
+    `).all(ownerId) as unknown as { id: string; caseId: string; action: string; occurredAt: string }[];
+    return rows.map(({ action, ...row }) => ({ ...row, event: action.slice('support_case.'.length) as SyntheticSupportUpdate['event'] }));
+  }
+
+  getNotificationPreference(ownerId: string): SyntheticNotificationPreference {
+    const row = this.database.prepare('SELECT * FROM synthetic_notification_preferences WHERE owner_id = ?').get(ownerId) as { owner_id: string; in_app_enabled: number; version: number; updated_at: string } | undefined;
+    if (row) return { ownerId: row.owner_id, inAppEnabled: Boolean(row.in_app_enabled), version: row.version, updatedAt: row.updated_at };
+    const timestamp = now();
+    this.database.prepare('INSERT INTO synthetic_notification_preferences (owner_id, in_app_enabled, version, updated_at) VALUES (?, ?, ?, ?)').run(ownerId, 1, 1, timestamp);
+    return { ownerId, inAppEnabled: true, version: 1, updatedAt: timestamp };
+  }
+
+  setNotificationPreference(ownerId: string, inAppEnabled: boolean, expectedVersion: number): SyntheticNotificationPreference | 'version_conflict' {
+    const current = this.getNotificationPreference(ownerId);
+    if (current.version !== expectedVersion) return 'version_conflict';
+    const updatedAt = now(); const version = current.version + 1;
+    return this.supportTransaction(() => {
+      const changed = this.database.prepare('UPDATE synthetic_notification_preferences SET in_app_enabled = ?, version = ?, updated_at = ? WHERE owner_id = ? AND version = ?').run(inAppEnabled ? 1 : 0, version, updatedAt, ownerId, expectedVersion);
+      if (!changed.changes) return 'version_conflict';
+      this.audit(ownerId, 'notification.preference_changed', 'notification_preference', ownerId);
+      return { ownerId, inAppEnabled, version, updatedAt };
+    });
+  }
+
+  recordDeliveryAttempt(operatorId: string, updateId: string, outcome: SyntheticDeliveryAttempt['outcome']): SyntheticDeliveryAttempt | 'not_found' {
+    const update = this.database.prepare("SELECT target_id AS case_id FROM audit_events WHERE id = ? AND target_type = 'synthetic_support_case'").get(updateId) as { case_id: string } | undefined;
+    if (!update) return 'not_found';
+    const owner = this.database.prepare('SELECT owner_id FROM synthetic_support_cases WHERE id = ?').get(update.case_id) as { owner_id: string } | undefined;
+    if (!owner) return 'not_found';
+    return this.supportTransaction(() => {
+    const prior = this.database.prepare('SELECT COUNT(*) AS count FROM synthetic_delivery_attempts WHERE update_id = ?').get(updateId) as { count: number };
+    const timestamp = now(); const attempt: SyntheticDeliveryAttempt = { id: randomUUID(), updateId, ownerId: owner.owner_id, outcome, attempt: Number(prior.count) + 1, version: Number(prior.count) + 1, createdAt: timestamp, ...(outcome === 'failed' ? { errorCode: 'DELIVERY_SIMULATED_FAILURE' as const } : {}) };
+    this.database.prepare('INSERT INTO synthetic_delivery_attempts (id, update_id, owner_id, outcome, attempt, version, created_at, error_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(attempt.id, updateId, owner.owner_id, outcome, attempt.attempt, attempt.version, timestamp, attempt.errorCode ?? null);
+    this.audit(operatorId, `notification.delivery_${outcome}`, 'synthetic_delivery_attempt', attempt.id);
+    return attempt;
+    });
+  }
+
+  private supportTransaction<T>(command: () => T): T {
+    this.database.exec('BEGIN IMMEDIATE');
+    try {
+      const result = command();
+      this.database.exec('COMMIT');
+      return result;
+    } catch (error) {
+      this.database.exec('ROLLBACK');
+      throw error;
+    }
   }
 
   private audit(actorId: string | null, action: string, targetType: string, targetId: string) {

@@ -130,6 +130,75 @@ test('operator advances Passport through version-checked synthetic transfer and 
   const buyerPassport = ((await json('/passports', { headers: { cookie: buyerCookie } })).body?.passports as { status: string; version: number }[])[0]; assert.equal(buyerPassport.status, 'checked_in'); assert.equal(buyerPassport.version, 7);
 });
 
+test('support cases stay owner-scoped and use protected version-checked recovery transitions', async () => {
+  const buyer = await json('/test-auth/session', { method: 'POST', body: JSON.stringify({ email: 'buyer-one@example.test' }) });
+  const buyerCookie = buyer.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(buyerCookie);
+  const passports = (await json('/passports', { headers: { cookie: buyerCookie } })).body?.passports as { id: string }[]; assert.ok(passports[0]);
+  assert.equal((await json('/support-cases', { method: 'POST', headers: { cookie: buyerCookie }, body: JSON.stringify({ category: 'unknown' }) })).response.status, 400);
+  const created = await json('/support-cases', { method: 'POST', headers: { cookie: buyerCookie }, body: JSON.stringify({ category: 'arrival_help', passportId: passports[0].id }) });
+  assert.equal(created.response.status, 201); let supportCase = created.body?.case as { id: string; status: string; version: number }; assert.equal(supportCase.status, 'open'); assert.equal(supportCase.version, 1);
+  assert.equal((await json('/support-cases')).response.status, 401);
+
+  const other = await json('/test-auth/session', { method: 'POST', body: JSON.stringify({ email: 'seller-two@example.test' }) }); const otherCookie = other.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(otherCookie);
+  assert.equal((await json('/support-cases', { method: 'POST', headers: { cookie: otherCookie }, body: JSON.stringify({ category: 'transfer_failed', passportId: passports[0].id }) })).response.status, 404);
+  assert.equal(((await json('/support-cases', { headers: { cookie: otherCookie } })).body?.cases as unknown[]).length, 0);
+  assert.equal((await json('/operations/support-cases', { headers: { cookie: buyerCookie } })).response.status, 403);
+
+  const operator = await json('/test-auth/operator-session', { method: 'POST', body: JSON.stringify({ email: 'operator@stayrelay.test' }) }); const operatorCookie = operator.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(operatorCookie);
+  const queue = await json('/operations/support-cases', { headers: { cookie: operatorCookie } }); assert.equal((queue.body?.cases as unknown[]).length, 1);
+  const escalated = await json(`/operations/support-cases/${supportCase.id}`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ status: 'escalated', expectedVersion: 1 }) });
+  assert.equal(escalated.response.status, 200); supportCase = escalated.body?.case as typeof supportCase; assert.equal(supportCase.status, 'escalated'); assert.equal(supportCase.version, 2);
+  assert.equal((await json(`/operations/support-cases/${supportCase.id}`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ status: 'resolved', expectedVersion: 1 }) })).response.status, 409);
+  const resolved = await json(`/operations/support-cases/${supportCase.id}`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ status: 'resolved', expectedVersion: 2 }) });
+  assert.equal(resolved.response.status, 200); supportCase = resolved.body?.case as typeof supportCase; assert.equal(supportCase.status, 'resolved'); assert.equal(supportCase.version, 3);
+  assert.equal((await json(`/operations/support-cases/${supportCase.id}`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ status: 'resolved', expectedVersion: 3 }) })).response.status, 409);
+  const projection = await json('/support-cases', { headers: { cookie: buyerCookie } });
+  const owned = projection.body?.cases as { status: string; version: number }[]; assert.equal(owned[0].status, 'resolved'); assert.equal(owned[0].version, 3);
+  assert.deepEqual((projection.body?.updates as { event: string }[]).map((update) => update.event), ['resolved', 'escalated', 'created']);
+  assert.deepEqual((await json('/support-cases', { headers: { cookie: otherCookie } })).body?.updates, []);
+  const preference = await json('/notification-preferences', { headers: { cookie: buyerCookie } }); assert.equal(preference.response.status, 200); assert.equal((preference.body?.preference as { version: number; inAppEnabled: boolean }).inAppEnabled, true);
+  assert.equal((await json('/notification-preferences', { method: 'POST', headers: { cookie: buyerCookie }, body: JSON.stringify({ inAppEnabled: false, expectedVersion: 1 }) })).response.status, 200);
+  assert.equal((await json('/notification-preferences', { method: 'POST', headers: { cookie: buyerCookie }, body: JSON.stringify({ inAppEnabled: true, expectedVersion: 1 }) })).response.status, 409);
+  const muted = await json('/support-cases', { headers: { cookie: buyerCookie } });
+  assert.deepEqual(muted.body?.updates, []);
+  assert.deepEqual(muted.body?.cases, projection.body?.cases);
+  assert.equal((await json('/notification-preferences', { method: 'POST', headers: { cookie: buyerCookie }, body: JSON.stringify({ inAppEnabled: true, expectedVersion: 2 }) })).response.status, 200);
+  assert.deepEqual((await json('/support-cases', { headers: { cookie: buyerCookie } })).body?.updates, projection.body?.updates);
+  const updateId = ((projection.body?.updates as { id: string }[])[0]).id;
+  const operatorDelivery = await json(`/operations/support-updates/${updateId}/delivery`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ outcome: 'failed' }) }); assert.equal(operatorDelivery.response.status, 200);
+  assert.equal((await json(`/operations/support-updates/${updateId}/delivery`, { method: 'POST', headers: { cookie: buyerCookie }, body: JSON.stringify({ outcome: 'delivered' }) })).response.status, 403);
+  assert.equal((await json(`/operations/support-updates/${updateId}/delivery`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ outcome: 'bogus' }) })).response.status, 400);
+});
+
+test('buyer recovery case is owner-scoped, operator-reviewed, audited and never charges money', async () => {
+  const buyer = await json('/test-auth/session', { method: 'POST', body: JSON.stringify({ email: 'buyer-one@example.test' }) }); const buyerCookie = buyer.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(buyerCookie);
+  const passport = ((await json('/passports', { headers: { cookie: buyerCookie } })).body?.passports as { id: string }[])[0]; assert.ok(passport);
+  const valid = { passportId: passport.id, requestType: 'refund_review', reason: 'Synthetic refund review', explanation: 'DEMO ONLY. No real payment was made.' };
+  for (const field of Object.keys(valid)) {
+    for (const value of [null, 42, true, [], { text: 'not a string' }]) {
+      const rejected = await json('/recovery-cases', { method: 'POST', headers: { cookie: buyerCookie }, body: JSON.stringify({ ...valid, [field]: value }) });
+      assert.equal(rejected.response.status, 400, `${field} rejects ${JSON.stringify(value)}`);
+      assert.equal((rejected.body?.error as { code: string }).code, 'INVALID_RECOVERY_CASE');
+    }
+  }
+  assert.deepEqual((await json('/recovery-cases', { headers: { cookie: buyerCookie } })).body?.cases, []);
+  const created = await json('/recovery-cases', { method: 'POST', headers: { cookie: buyerCookie }, body: JSON.stringify(valid) });
+  assert.equal(created.response.status, 201); let recovery = created.body?.case as { id: string; status: string; version: number }; assert.equal(recovery.status, 'submitted'); assert.equal(recovery.version, 1);
+  assert.equal((await json('/recovery-cases', { headers: { cookie: buyerCookie } })).response.status, 200);
+  const other = await json('/test-auth/session', { method: 'POST', body: JSON.stringify({ email: 'seller-two@example.test' }) }); const otherCookie = other.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(otherCookie);
+  assert.deepEqual((await json('/recovery-cases', { headers: { cookie: otherCookie } })).body?.cases, []);
+  assert.equal((await json('/recovery-cases', { method: 'POST', headers: { cookie: otherCookie }, body: JSON.stringify({ passportId: passport.id, requestType: 'cancellation', reason: 'other', explanation: 'no' }) })).response.status, 404);
+  const operator = await json('/test-auth/operator-session', { method: 'POST', body: JSON.stringify({ email: 'operator@stayrelay.test' }) }); const operatorCookie = operator.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(operatorCookie);
+  const queue = await json('/operations/recovery-cases', { headers: { cookie: operatorCookie } }); assert.equal((queue.body?.cases as unknown[]).length, 1);
+  const review = await json(`/operations/recovery-cases/${recovery.id}`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ status: 'under_review', expectedVersion: 1 }) }); assert.equal(review.response.status, 200); recovery = review.body?.case as typeof recovery;
+  assert.equal((await json(`/operations/recovery-cases/${recovery.id}`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ status: 'approved_synthetic_refund', expectedVersion: 2 }) })).response.status, 409);
+  const pending = await json(`/operations/recovery-cases/${recovery.id}`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ status: 'recovery_pending', expectedVersion: 2 }) }); assert.equal(pending.response.status, 200); recovery = pending.body?.case as typeof recovery;
+  const approved = await json(`/operations/recovery-cases/${recovery.id}`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ status: 'approved_synthetic_refund', expectedVersion: recovery.version }) }); assert.equal(approved.response.status, 200);
+  const seller = await json('/test-auth/session', { method: 'POST', body: JSON.stringify({ email: 'seller-one@example.test' }) }); const sellerCookie = seller.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(sellerCookie);
+  assert.equal(((await json('/recovery-cases', { headers: { cookie: sellerCookie } })).body?.cases as unknown[]).length, 1);
+  assert.equal((await json('/operations/recovery-cases', { headers: { cookie: buyerCookie } })).response.status, 403);
+});
+
 test('audit records carry actor, reason, correlation, target and timestamp without document content', () => {
   const store = new TestStore(':memory:'); const account = store.createAccount('audit@example.test', 'Demo Audit User'); assert.ok(account);
   const row = store.database.prepare('SELECT actor_id, action, reason_code, correlation_id, target_type, target_id, occurred_at FROM audit_events ORDER BY occurred_at DESC LIMIT 1').get() as Record<string, string>;

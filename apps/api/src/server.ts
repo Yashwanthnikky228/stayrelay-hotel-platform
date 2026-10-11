@@ -1,4 +1,6 @@
-import { app } from './app';
+import { createApp } from './app';
+
+const app = createApp();
 
 const port = Number(process.env.API_PORT ?? 3000);
 

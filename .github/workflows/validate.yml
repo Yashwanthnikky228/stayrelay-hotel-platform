@@ -1,0 +1,45 @@
+name: Application validation
+
+on:
+  pull_request:
+  push:
+    branches: [main, 'task/**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Unit and API tests
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm test:unit 2>&1 | tee "$RUNNER_TEMP/stayrelay-tests.log"
+      - name: Expose failure diagnostics in check annotations
+        if: failure()
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = process.env.RUNNER_TEMP + '/stayrelay-tests.log';
+          if (fs.existsSync(path)) {
+            const text = fs.readFileSync(path, 'utf8').split('\n').slice(-80).join('\n');
+            console.log('::error title=Test failure details::' + text.replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A'));
+          }
+          NODE
+      # Build includes strict type checking and both frontend builds.
+      - run: pnpm build

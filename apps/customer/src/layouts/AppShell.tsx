@@ -4,6 +4,7 @@ const navigation = [
   { to: '/', label: 'Find a stay', end: true },
   { to: '/account', label: 'Account' },
   { to: '/passport', label: 'Reservation Passport' },
+  { to: '/support', label: 'Support' },
   { to: '/operations', label: 'Admin access' },
 ];
 

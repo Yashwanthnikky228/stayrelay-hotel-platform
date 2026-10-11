@@ -1,6 +1,6 @@
 # StayRelay AI Handoff State
 
-Updated: 2026-10-10. Active chunk: supplemental synthetic product implementation.
+Updated: 2026-10-11. Active chunk: supplemental synthetic product implementation.
 Repository: `Yashwanthnikky228/stayrelay-hotel-platform`.
 Current content branch/commit are the last row; this handoff is committed separately to avoid a self-referential SHA.
 Default main observed: `c2e337e4a083ceac61e890c4c02d6d7865c9edf6`; no merge or production action.
@@ -55,6 +55,8 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | SR checkout/passport | `task/sr-checkout-passport` | `622bcf5` | published synthetic offer checkout simulation and owner-scoped Reservation Passport with money disabled | typecheck, both builds, 16 unit/API tests; Chromium 390px checkout-to-Passport journey pass |
 | SR Passport transitions | `task/sr-passport-transitions` | `0df8af0` | append-only, optimistic-version synthetic payment/transfer/arrival lifecycle with operator controls | typecheck, both builds, 17 unit/API tests; Chromium operations and 390px checked-in Passport pass |
 | SR in-progress closure | `task/sr-in-progress-closure` | `6f7e370` | resolved all 111 previously In-progress tracker rows using shared contracts, complete audit metadata, timeout/retry states and consolidated QA | typecheck, both builds, 18 unit/API tests; Chromium 320/768/1440 reflow, keyboard, reduced-motion and connected operations pass |
+| SR support/recovery | `task/sr-support-recovery` | `7386cb6` | owner-scoped synthetic support cases and protected, version-checked operator escalation/resolution; all real communications and financial outcomes remain disabled | typecheck, both builds, 19 unit/API tests; Chromium customer 390px, operations desktop, plus 320/768/1280 reflow and keyboard focus pass |
+| SR synthetic recovery | `task/sr-support-notifications` | `d00a5a2` | buyer-linked cancellation/refund/recovery cases with operator state machine, audit trail, seller visibility and payment-provider safety boundary | typecheck, both builds, 24 unit/API tests; Chromium buyer 390px and operations recovery queue 1280px |
 
 ## Persistent controls and blockers
 
@@ -90,6 +92,32 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 - Deployment blocker rechecked once after the 2026-10-11 environment restart: all four Vercel bindings are present, while `api.vercel.com` still fails DNS with `EAI_AGAIN` both normally and outside the sandbox. Native Git remains available; do not retry the same Vercel API request without a network-policy/environment change.
 - A published synthetic offer can now create one buyer-owned local order and Reservation Passport. Self-purchase, duplicates, unknown offers, anonymous access and cross-account Passport reads fail closed. Status remains payment-confirmation-pending; money movement, payout and arrival credentials remain disabled.
 - The Passport lifecycle now uses append-only state events and expected-version commands. The ordered synthetic path reaches checked-in while stale versions and invalid jumps fail closed; buyer and operations projections agree. No real provider, transfer, hotel action or QR exists.
-- The supplemental tracker now contains 211 Done, 539 Not started and zero In-progress rows, with 750 unique IDs and zero Done dependency violations. Closure evidence is in `SYNTHETIC-FLOW-CONTRACTS.md` and `SR-IN-PROGRESS-CLOSURE-QA.md`. External hosted/provider/legal/release work remains Not started rather than being falsely completed.
-- Next synthetic milestone: transfer failure, claims/recovery and support escalation states, followed by cancellation/refund simulation.
+- The supplemental tracker now contains 227 Done, 523 Not started and zero In-progress rows, with 750 unique IDs and zero Done dependency violations. Support rows were closed only where content commit `7386cb6`, 19/19 tests and browser evidence satisfy the row; notification delivery and its downstream rows remain Not started.
+- Synthetic support cases are customer-owned, may reference only an owned Passport, and use open/escalated/resolved versions. Reserved operators can read and transition cases; stale, repeated-terminal, role and cross-account requests fail closed. The browser evidence is `/workspace/stayrelay-support-customer-mobile.png` and `/workspace/stayrelay-support-operations.png`.
+- Continuation checkpoint: branch `task/sr-support-notifications`, content commit `45aad56`, tracker/state commit follows, based on `1b0aec1`. Support writes and audits are atomic; customer Case updates shows the latest 100 owner-only persisted events; versioned in-app preference and operator-only disconnected delivery outcomes are implemented. New tests prove audit-failure rollback, cross-connection stale denial, reopen persistence, preference conflicts, delivery failure and projection privacy. All 23 tests and strict typecheck/both builds pass; Chromium connected flow, failed-refresh clearing, preference toggle and 320/768/1280 reflow pass. Evidence: `SR-SUPPORT-FEED-QA.md`, `/workspace/stayrelay-support-feed.png`, and `/workspace/stayrelay-notification-preference.png`.
+- Current supplemental totals supersede the preceding snapshot: 237 Done, 513 Not started, 0 In Progress; 750 unique IDs and zero Done dependency violations. SR-464/465/467/468/470/471/472/473/474/475 completed for support/in-app updates. External email/SMS/push/webhook delivery, hosted persistence and independent certification remain blocked and disabled.
+- Next executable milestone is cancellation/refund simulation with the same synthetic, server-authoritative, fail-closed boundary. Hosted deployment is unverified for this branch; no production merge occurred.
+- Synthetic recovery now links an owned buyer Passport to its order and seller draft. Cases support bounded cancellation, refund review, transfer failure, arrival issue, seller payout hold and evidence dispute requests. Operator transitions are versioned and audited; only synthetic refund approval is possible and no order/payment state is changed. Evidence: `SR-RECOVERY-FLOW-QA.md`, `/workspace/stayrelay-recovery-buyer.png`, `/workspace/stayrelay-recovery-operations.png`.
+- Next executable milestone is payout hold/release simulation and seller visibility, retaining the same provider-disabled boundary. Hosted deployment is unverified for this branch; no production merge occurred.
 - Next canonical task is TASK-0051, but it depends on blocked TASK-0050. TASK-0076 shares that dependency. Continue only with an independently dependency-ready row or after the named external gates are evidenced.
+
+## Latest continuation: recovery durability (2026-10-11)
+
+### Latest checkpoint: application test gates
+
+- Branch `task/sr-test-gates`; code `26a5c13`, based on eb6dd86. Added CI unit/API tests, strict typecheck and both builds; recovery rejects non-string input fields with 20 malformed-field assertions and no persisted case.
+- Local 27 tests and both builds pass, including fresh-database rerun. GitHub run 38130031967 passed on 26a5c13. Earlier run 38129889936 failed tests; root cause remains unexplained because redirected logs return proxy 403. Do not describe this as a proven CI defect fix.
+- SR-576 and SR-577 completed with `SR-TEST-COVERAGE-CONTRACT.md` and a219d54 evidence: scope audit and measurable requirements only. Supplemental totals: 239 Done / 511 Not started; canonical tracker unchanged.
+- GitHub API, checks/status reads and repository permissions are now verified; Vercel protected preview access also works. Prior blanket API blockers are superseded. GitHub log storage host productionresultssa19.blob.core.windows.net remains proxy-blocked.
+- Next executable work: recovery draft/edit/submit lifecycle and participant timeline; inspect review PR and preview before permitted integration. Production unchanged; hosted persistence and provider activation remain separate gates.
+
+### Newer checkpoint: recovery selection/preference
+
+- Branch `task/sr-recovery-selection`, implementation `a7b88dd` (pushed), builds on a22e5a3. Explicit recovery Passport selection, duplicate-submit guard, stale-choice clearing and server-enforced notification feed preference are implemented.
+- 27 unit/API tests, strict typecheck, both builds and repeatable Chromium contract checks pass. Browser widths 320/390/768/1280; details in `SR-SELECTION-PREFERENCE-QA.md`.
+- Next executable work: persisted recovery draft/edit/submit workflow followed by owner-scoped timeline and seller permissions. No new Done row claims; canonical release gates preserved. No production merge/promotion.
+
+- Branch `task/sr-recovery-atomicity`; implementation commits `12dc050` and `1f1f511`, pushed. Recovery decisions, preferences and simulated delivery writes now roll back when their audits fail. 27 tests, typecheck and both builds pass.
+- Supersedes earlier DNS-only blocker: Vercel authenticated access WORKS through the existing HTTPS proxy. Existing project and main production branch verified. Git-generated preview for `12dc050` is READY; see `SR-RECOVERY-DURABILITY-QA.md`. SSO prevents unauthenticated preview smoke verification; no production promotion occurred.
+- GitHub API still fails proxy CONNECT 403; Git read/push works. Normal review/check/merge access must be restored, not bypassed.
+- Next executable task: explicit recovery Passport selection and draft/submit flow, then participant timeline and seller permissions. Also enforce notification feed preference. Existing broad recovery acceptance does not prove these missing capabilities; no new Done claims in this batch. Hosted persistence and real providers remain disabled.

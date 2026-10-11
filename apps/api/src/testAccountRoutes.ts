@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import type { DemoReviewDecision, PropertySearchFilters, SellerReservationDraft } from '@stayrelay/domain';
+import type { DemoReviewDecision, PropertySearchFilters, SellerReservationDraft, SyntheticRecoveryRequestType, SyntheticRecoveryStatus, SyntheticSupportCase } from '@stayrelay/domain';
 import { sessionTtlSeconds, TestStore } from './testStore';
 
 const cookieName = 'stayrelay_test_session';
@@ -18,7 +18,7 @@ function setSession(response: Response, token: string) {
 }
 
 export function handleTestAccountRoute(request: Request, response: Response, store: TestStore, enabled: boolean): boolean {
-  if (!request.path.startsWith('/test-auth') && request.path !== '/account' && request.path !== '/properties' && request.path !== '/checkout-simulations' && request.path !== '/passports' && !request.path.startsWith('/seller-drafts') && !request.path.startsWith('/synthetic-evidence') && !request.path.startsWith('/operations/')) return false;
+  if (!request.path.startsWith('/test-auth') && request.path !== '/account' && request.path !== '/properties' && request.path !== '/checkout-simulations' && request.path !== '/passports' && request.path !== '/support-cases' && request.path !== '/recovery-cases' && !request.path.startsWith('/seller-drafts') && !request.path.startsWith('/synthetic-evidence') && !request.path.startsWith('/notification-preferences') && !request.path.startsWith('/operations/')) return false;
   response.setHeader('Cache-Control', 'no-store');
   if (!enabled && request.path === '/properties') return false;
   if (!enabled) { error(response, 503, 'TEST_AUTH_DISABLED', 'Local synthetic authentication is disabled.'); return true; }
@@ -60,6 +60,35 @@ export function handleTestAccountRoute(request: Request, response: Response, sto
     if (!store.isOperator(account.id)) { error(response, 403, 'OPERATOR_REQUIRED', 'Operator permission is required.'); return true; }
     if (request.path === '/operations/reviews' && request.method === 'GET') { response.json({ reviews: store.listReviewQueue() }); return true; }
     if (request.path === '/operations/passports' && request.method === 'GET') { response.json({ passports: store.listAllPassports() }); return true; }
+    if (request.path === '/operations/support-cases' && request.method === 'GET') { response.json({ cases: store.listSupportCases() }); return true; }
+    if (request.path === '/operations/recovery-cases' && request.method === 'GET') { response.json({ cases: store.listRecoveryCases() }); return true; }
+    const recoveryTransition = request.path.match(/^\/operations\/recovery-cases\/([^/]+)$/);
+    if (recoveryTransition && request.method === 'POST') {
+      const input = body(request); const status = String(input.status) as SyntheticRecoveryStatus; const expectedVersion = Number(input.expectedVersion);
+      if (!['under_review','waiting_for_user','recovery_pending','approved_synthetic_refund','rejected','closed'].includes(status) || !Number.isInteger(expectedVersion)) { error(response, 400, 'INVALID_RECOVERY_TRANSITION', 'Use an allowed recovery status and integer version.'); return true; }
+      const result = store.transitionRecoveryCase(account.id, recoveryTransition[1], status, expectedVersion);
+      if (result === 'not_found') { error(response, 404, 'RECOVERY_CASE_NOT_FOUND', 'Recovery case not found.'); return true; }
+      if (result === 'version_conflict') { error(response, 409, 'VERSION_CONFLICT', 'Recovery case changed; reload before retrying.'); return true; }
+      if (result === 'invalid_transition') { error(response, 409, 'INVALID_RECOVERY_TRANSITION', 'That recovery transition is not allowed.'); return true; }
+      response.json({ case: result }); return true;
+    }
+    const deliveryMatch = request.path.match(/^\/operations\/support-updates\/([^/]+)\/delivery$/);
+    if (deliveryMatch && request.method === 'POST') {
+      const outcome = String(body(request).outcome);
+      if (!['queued', 'delivered', 'failed'].includes(outcome)) { error(response, 400, 'INVALID_DELIVERY_OUTCOME', 'Use queued, delivered or failed.'); return true; }
+      const attempt = store.recordDeliveryAttempt(account.id, deliveryMatch[1], outcome as 'queued' | 'delivered' | 'failed');
+      if (attempt === 'not_found') { error(response, 404, 'SUPPORT_UPDATE_NOT_FOUND', 'Synthetic support update not found.'); return true; }
+      response.json({ attempt }); return true;
+    }
+    const supportTransition = request.path.match(/^\/operations\/support-cases\/([^/]+)$/);
+    if (supportTransition && request.method === 'POST') {
+      const input = body(request); const status = String(input.status); const expectedVersion = Number(input.expectedVersion);
+      if (!['escalated','resolved'].includes(status) || !Number.isInteger(expectedVersion)) { error(response, 400, 'INVALID_SUPPORT_TRANSITION', 'Use an allowed status and integer version.'); return true; }
+      const result = store.transitionSupportCase(account.id, supportTransition[1], status as 'escalated' | 'resolved', expectedVersion);
+      if (result === 'not_found') { error(response, 404, 'SUPPORT_CASE_NOT_FOUND', 'Synthetic support case not found.'); return true; }
+      if (result === 'version_conflict') { error(response, 409, 'VERSION_CONFLICT', 'Support case changed; reload before retrying.'); return true; }
+      response.json({ case: result }); return true;
+    }
     const passportTransition = request.path.match(/^\/operations\/passports\/([^/]+)\/transition$/);
     if (passportTransition && request.method === 'POST') {
       const input = body(request); const expectedVersion = Number(input.expectedVersion); const action = String(input.action ?? '');
@@ -89,6 +118,34 @@ export function handleTestAccountRoute(request: Request, response: Response, sto
     response.status(201).json(result); return true;
   }
   if (request.path === '/passports' && request.method === 'GET') { response.json({ passports: store.listPassports(account.id) }); return true; }
+  if (request.path === '/support-cases' && request.method === 'GET') {
+    const enabled = store.getNotificationPreference(account.id).inAppEnabled;
+    response.json({ cases: store.listSupportCases(account.id), updates: enabled ? store.listSupportUpdates(account.id) : [] }); return true;
+  }
+  if (request.path === '/recovery-cases' && request.method === 'GET') { response.json({ cases: store.listRecoveryCases(account.id) }); return true; }
+  if (request.path === '/recovery-cases' && request.method === 'POST') {
+    const fields = body(request);
+    if (['passportId', 'requestType', 'reason', 'explanation'].some((key) => typeof fields[key] !== 'string')) {
+      error(response, 400, 'INVALID_RECOVERY_CASE', 'Recovery fields must be text values.'); return true;
+    }
+    const input = body(request); const passportId = String(input.passportId ?? ''); const requestType = String(input.requestType) as SyntheticRecoveryRequestType; const reason = String(input.reason ?? '').trim(); const explanation = String(input.explanation ?? '').trim();
+    if (!passportId || !['cancellation','refund_review','transfer_failure','arrival_issue','seller_payout_hold','evidence_dispute'].includes(requestType) || !reason || reason.length > 120 || !explanation || explanation.length > 1000) { error(response, 400, 'INVALID_RECOVERY_CASE', 'Use an owned Passport, supported request type, bounded reason and explanation.'); return true; }
+    const result = store.createRecoveryCase(account.id, passportId, requestType, reason, explanation); if (result === 'passport_not_found') { error(response, 404, 'PASSPORT_NOT_FOUND', 'Owned Reservation Passport not found.'); return true; } if (result === 'exists') { error(response, 409, 'RECOVERY_CASE_EXISTS', 'A recovery case already exists for this Passport.'); return true; }
+    response.status(201).json({ case: result }); return true;
+  }
+  if (request.path === '/notification-preferences' && request.method === 'GET') { response.json({ preference: store.getNotificationPreference(account.id) }); return true; }
+  if (request.path === '/notification-preferences' && request.method === 'POST') {
+    const input = body(request); const enabled = input.inAppEnabled; const expectedVersion = Number(input.expectedVersion);
+    if (typeof enabled !== 'boolean' || !Number.isInteger(expectedVersion) || expectedVersion < 1) { error(response, 400, 'INVALID_NOTIFICATION_PREFERENCE', 'Use a boolean preference and positive expected version.'); return true; }
+    const preference = store.setNotificationPreference(account.id, enabled, expectedVersion); if (preference === 'version_conflict') { error(response, 409, 'VERSION_CONFLICT', 'Preference changed; reload before retrying.'); return true; }
+    response.json({ preference }); return true;
+  }
+  if (request.path === '/support-cases' && request.method === 'POST') {
+    const input = body(request); const category = String(input.category) as SyntheticSupportCase['category']; const passportId = input.passportId ? String(input.passportId) : undefined;
+    if (!['transfer_failed','arrival_help','refund_question'].includes(category)) { error(response, 400, 'INVALID_SUPPORT_CATEGORY', 'Choose a supported synthetic category.'); return true; }
+    const result = store.createSupportCase(account.id, category, passportId); if (result === 'passport_not_found') { error(response, 404, 'PASSPORT_NOT_FOUND', 'Owned Reservation Passport not found.'); return true; }
+    response.status(201).json({ case: result }); return true;
+  }
   if (request.path === '/seller-drafts' && request.method === 'GET') { response.json({ drafts: store.listDrafts(account.id) }); return true; }
   if (request.path === '/seller-drafts' && request.method === 'POST') {
     const input = body(request); const hotelName = String(input.hotelName ?? '').trim(); const city = String(input.city ?? '').trim(); const checkIn = String(input.checkIn ?? ''); const checkOut = String(input.checkOut ?? ''); const guestCount = Number(input.guestCount);
