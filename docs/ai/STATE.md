@@ -1,6 +1,6 @@
 # StayRelay AI Handoff State
 
-Updated: 2026-10-10. Active chunk: supplemental synthetic product implementation.
+Updated: 2026-10-11. Active chunk: supplemental synthetic product implementation.
 Repository: `Yashwanthnikky228/stayrelay-hotel-platform`.
 Current content branch/commit are the last row; this handoff is committed separately to avoid a self-referential SHA.
 Default main observed: `c2e337e4a083ceac61e890c4c02d6d7865c9edf6`; no merge or production action.
@@ -55,6 +55,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 | SR checkout/passport | `task/sr-checkout-passport` | `622bcf5` | published synthetic offer checkout simulation and owner-scoped Reservation Passport with money disabled | typecheck, both builds, 16 unit/API tests; Chromium 390px checkout-to-Passport journey pass |
 | SR Passport transitions | `task/sr-passport-transitions` | `0df8af0` | append-only, optimistic-version synthetic payment/transfer/arrival lifecycle with operator controls | typecheck, both builds, 17 unit/API tests; Chromium operations and 390px checked-in Passport pass |
 | SR in-progress closure | `task/sr-in-progress-closure` | `6f7e370` | resolved all 111 previously In-progress tracker rows using shared contracts, complete audit metadata, timeout/retry states and consolidated QA | typecheck, both builds, 18 unit/API tests; Chromium 320/768/1440 reflow, keyboard, reduced-motion and connected operations pass |
+| SR support/recovery | `task/sr-support-recovery` | `7386cb6` | owner-scoped synthetic support cases and protected, version-checked operator escalation/resolution; all real communications and financial outcomes remain disabled | typecheck, both builds, 19 unit/API tests; Chromium customer 390px, operations desktop, plus 320/768/1280 reflow and keyboard focus pass |
 
 ## Persistent controls and blockers
 
@@ -90,6 +91,7 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 - Deployment blocker rechecked once after the 2026-10-11 environment restart: all four Vercel bindings are present, while `api.vercel.com` still fails DNS with `EAI_AGAIN` both normally and outside the sandbox. Native Git remains available; do not retry the same Vercel API request without a network-policy/environment change.
 - A published synthetic offer can now create one buyer-owned local order and Reservation Passport. Self-purchase, duplicates, unknown offers, anonymous access and cross-account Passport reads fail closed. Status remains payment-confirmation-pending; money movement, payout and arrival credentials remain disabled.
 - The Passport lifecycle now uses append-only state events and expected-version commands. The ordered synthetic path reaches checked-in while stale versions and invalid jumps fail closed; buyer and operations projections agree. No real provider, transfer, hotel action or QR exists.
-- The supplemental tracker now contains 211 Done, 539 Not started and zero In-progress rows, with 750 unique IDs and zero Done dependency violations. Closure evidence is in `SYNTHETIC-FLOW-CONTRACTS.md` and `SR-IN-PROGRESS-CLOSURE-QA.md`. External hosted/provider/legal/release work remains Not started rather than being falsely completed.
-- Next synthetic milestone: transfer failure, claims/recovery and support escalation states, followed by cancellation/refund simulation.
+- The supplemental tracker now contains 227 Done, 523 Not started and zero In-progress rows, with 750 unique IDs and zero Done dependency violations. Support rows were closed only where content commit `7386cb6`, 19/19 tests and browser evidence satisfy the row; notification delivery and its downstream rows remain Not started.
+- Synthetic support cases are customer-owned, may reference only an owned Passport, and use open/escalated/resolved versions. Reserved operators can read and transition cases; stale, repeated-terminal, role and cross-account requests fail closed. The browser evidence is `/workspace/stayrelay-support-customer-mobile.png` and `/workspace/stayrelay-support-operations.png`.
+- Next dependency-ready support work is SR-464 deterministic notification/support fixtures, then SR-465/SR-467/SR-468 and the remaining performance/security/guide/analytics/evidence review. The broader next product milestone is cancellation/refund simulation; no real message, claim, refund or money movement is enabled.
 - Next canonical task is TASK-0051, but it depends on blocked TASK-0050. TASK-0076 shares that dependency. Continue only with an independently dependency-ready row or after the named external gates are evidenced.
