@@ -1,9 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getApiReply } from '../apps/api/src/responses.ts';
 
 export default function handler(request: VercelRequest, response: VercelResponse) {
-  const reply = getApiReply('/properties', request.method ?? 'GET');
   response.setHeader('Cache-Control', 'no-store');
-  if (reply.allow) response.setHeader('Allow', reply.allow);
-  return response.status(reply.status).json(reply.body);
+  if (!['GET', 'HEAD'].includes(request.method ?? 'GET')) {
+    response.setHeader('Allow', 'GET, HEAD');
+    return response.status(405).json({ error: { code: 'METHOD_NOT_ALLOWED', message: 'This API route is read-only.' } });
+  }
+  return response.status(503).json({ error: { code: 'INVENTORY_NOT_CONFIGURED', message: 'Live hotel inventory is not connected yet.' } });
 }
