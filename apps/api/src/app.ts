@@ -24,5 +24,3 @@ export function createApp(options: { store?: TestStore; testAuthEnabled?: boolea
   });
   return app;
 }
-
-export const app = createApp();
