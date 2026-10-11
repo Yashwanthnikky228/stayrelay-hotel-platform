@@ -100,3 +100,10 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 - Synthetic recovery now links an owned buyer Passport to its order and seller draft. Cases support bounded cancellation, refund review, transfer failure, arrival issue, seller payout hold and evidence dispute requests. Operator transitions are versioned and audited; only synthetic refund approval is possible and no order/payment state is changed. Evidence: `SR-RECOVERY-FLOW-QA.md`, `/workspace/stayrelay-recovery-buyer.png`, `/workspace/stayrelay-recovery-operations.png`.
 - Next executable milestone is payout hold/release simulation and seller visibility, retaining the same provider-disabled boundary. Hosted deployment is unverified for this branch; no production merge occurred.
 - Next canonical task is TASK-0051, but it depends on blocked TASK-0050. TASK-0076 shares that dependency. Continue only with an independently dependency-ready row or after the named external gates are evidenced.
+
+## Latest continuation: recovery durability (2026-10-11)
+
+- Branch `task/sr-recovery-atomicity`; implementation commits `12dc050` and `1f1f511`, pushed. Recovery decisions, preferences and simulated delivery writes now roll back when their audits fail. 27 tests, typecheck and both builds pass.
+- Supersedes earlier DNS-only blocker: Vercel authenticated access WORKS through the existing HTTPS proxy. Existing project and main production branch verified. Git-generated preview for `12dc050` is READY; see `SR-RECOVERY-DURABILITY-QA.md`. SSO prevents unauthenticated preview smoke verification; no production promotion occurred.
+- GitHub API still fails proxy CONNECT 403; Git read/push works. Normal review/check/merge access must be restored, not bypassed.
+- Next executable task: explicit recovery Passport selection and draft/submit flow, then participant timeline and seller permissions. Also enforce notification feed preference. Existing broad recovery acceptance does not prove these missing capabilities; no new Done claims in this batch. Hosted persistence and real providers remain disabled.
