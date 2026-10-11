@@ -103,6 +103,14 @@ Read [sources](SOURCE-OF-TRUTH.md), [architecture register](../adr/0002-architec
 
 ## Latest continuation: recovery durability (2026-10-11)
 
+### Latest checkpoint: application test gates
+
+- Branch `task/sr-test-gates`; code `26a5c13`, based on eb6dd86. Added CI unit/API tests, strict typecheck and both builds; recovery rejects non-string input fields with 20 malformed-field assertions and no persisted case.
+- Local 27 tests and both builds pass, including fresh-database rerun. GitHub run 38130031967 passed on 26a5c13. Earlier run 38129889936 failed tests; root cause remains unexplained because redirected logs return proxy 403. Do not describe this as a proven CI defect fix.
+- SR-576 and SR-577 completed with `SR-TEST-COVERAGE-CONTRACT.md` and a219d54 evidence: scope audit and measurable requirements only. Supplemental totals: 239 Done / 511 Not started; canonical tracker unchanged.
+- GitHub API, checks/status reads and repository permissions are now verified; Vercel protected preview access also works. Prior blanket API blockers are superseded. GitHub log storage host productionresultssa19.blob.core.windows.net remains proxy-blocked.
+- Next executable work: recovery draft/edit/submit lifecycle and participant timeline; inspect review PR and preview before permitted integration. Production unchanged; hosted persistence and provider activation remain separate gates.
+
 ### Newer checkpoint: recovery selection/preference
 
 - Branch `task/sr-recovery-selection`, implementation `a7b88dd` (pushed), builds on a22e5a3. Explicit recovery Passport selection, duplicate-submit guard, stale-choice clearing and server-enforced notification feed preference are implemented.
