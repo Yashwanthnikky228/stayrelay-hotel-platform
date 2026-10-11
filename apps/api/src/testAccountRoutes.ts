@@ -99,7 +99,7 @@ export function handleTestAccountRoute(request: Request, response: Response, sto
     response.status(201).json(result); return true;
   }
   if (request.path === '/passports' && request.method === 'GET') { response.json({ passports: store.listPassports(account.id) }); return true; }
-  if (request.path === '/support-cases' && request.method === 'GET') { response.json({ cases: store.listSupportCases(account.id) }); return true; }
+  if (request.path === '/support-cases' && request.method === 'GET') { response.json({ cases: store.listSupportCases(account.id), updates: store.listSupportUpdates(account.id) }); return true; }
   if (request.path === '/support-cases' && request.method === 'POST') {
     const input = body(request); const category = String(input.category) as SyntheticSupportCase['category']; const passportId = input.passportId ? String(input.passportId) : undefined;
     if (!['transfer_failed','arrival_help','refund_question'].includes(category)) { error(response, 400, 'INVALID_SUPPORT_CATEGORY', 'Choose a supported synthetic category.'); return true; }

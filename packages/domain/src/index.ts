@@ -185,6 +185,13 @@ export interface SyntheticOrder {
   createdAt: ISODateTime;
 }
 
+export interface SyntheticSupportUpdate {
+  id: EntityId;
+  caseId: EntityId;
+  event: 'created' | 'escalated' | 'resolved';
+  occurredAt: ISODateTime;
+}
+
 export interface SyntheticSupportCase {
   id: EntityId;
   ownerId: EntityId;

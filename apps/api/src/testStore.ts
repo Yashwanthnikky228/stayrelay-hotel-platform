@@ -2,7 +2,7 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import type { DemoReviewDecision, DemoReviewQueueItem, PropertyOffer, PropertySearchFilters, ReservationPassport, SellerReservationDraft, SyntheticAccount, SyntheticEvidenceMetadata, SyntheticOrder, SyntheticSupportCase } from '@stayrelay/domain';
+import type { DemoReviewDecision, DemoReviewQueueItem, PropertyOffer, PropertySearchFilters, ReservationPassport, SellerReservationDraft, SyntheticAccount, SyntheticEvidenceMetadata, SyntheticOrder, SyntheticSupportCase, SyntheticSupportUpdate } from '@stayrelay/domain';
 
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
 
@@ -234,8 +234,10 @@ export class TestStore {
   createSupportCase(ownerId: string, category: SyntheticSupportCase['category'], passportId?: string): SyntheticSupportCase | 'passport_not_found' {
     if (passportId && !this.listPassports(ownerId).some((passport) => passport.id === passportId)) return 'passport_not_found';
     const timestamp = now(); const item: SyntheticSupportCase = { id: randomUUID(), ownerId, ...(passportId ? { passportId } : {}), category, status: 'open', version: 1, createdAt: timestamp, updatedAt: timestamp };
-    this.database.prepare('INSERT INTO synthetic_support_cases (id, owner_id, passport_id, category, status, version, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(item.id, ownerId, passportId ?? null, category, item.status, item.version, timestamp, timestamp);
-    this.audit(ownerId, 'support_case.created', 'synthetic_support_case', item.id); return item;
+    return this.supportTransaction(() => {
+      this.database.prepare('INSERT INTO synthetic_support_cases (id, owner_id, passport_id, category, status, version, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(item.id, ownerId, passportId ?? null, category, item.status, item.version, timestamp, timestamp);
+      this.audit(ownerId, 'support_case.created', 'synthetic_support_case', item.id); return item;
+    });
   }
 
   listSupportCases(ownerId?: string): SyntheticSupportCase[] {
@@ -247,8 +249,35 @@ export class TestStore {
     const item = this.listSupportCases().find((candidate) => candidate.id === caseId); if (!item) return 'not_found';
     if (item.version !== expectedVersion || item.status === 'resolved' || (item.status === 'escalated' && status === 'escalated')) return 'version_conflict';
     const version = item.version + 1; const updatedAt = now();
-    const changed = this.database.prepare('UPDATE synthetic_support_cases SET status = ?, version = ?, updated_at = ? WHERE id = ? AND version = ?').run(status, version, updatedAt, caseId, expectedVersion);
-    if (!changed.changes) return 'version_conflict'; this.audit(operatorId, `support_case.${status}`, 'synthetic_support_case', caseId); return { ...item, status, version, updatedAt };
+    return this.supportTransaction(() => {
+      const changed = this.database.prepare('UPDATE synthetic_support_cases SET status = ?, version = ?, updated_at = ? WHERE id = ? AND version = ?').run(status, version, updatedAt, caseId, expectedVersion);
+      if (!changed.changes) return 'version_conflict';
+      this.audit(operatorId, `support_case.${status}`, 'synthetic_support_case', caseId);
+      return { ...item, status, version, updatedAt };
+    });
+  }
+
+  listSupportUpdates(ownerId: string): SyntheticSupportUpdate[] {
+    const rows = this.database.prepare(`
+      SELECT a.id, a.target_id AS caseId, a.action, a.occurred_at AS occurredAt
+      FROM audit_events a JOIN synthetic_support_cases c ON c.id = a.target_id
+      WHERE c.owner_id = ? AND a.target_type = 'synthetic_support_case'
+        AND a.action IN ('support_case.created', 'support_case.escalated', 'support_case.resolved')
+      ORDER BY a.rowid DESC LIMIT 100
+    `).all(ownerId) as unknown as { id: string; caseId: string; action: string; occurredAt: string }[];
+    return rows.map(({ action, ...row }) => ({ ...row, event: action.slice('support_case.'.length) as SyntheticSupportUpdate['event'] }));
+  }
+
+  private supportTransaction<T>(command: () => T): T {
+    this.database.exec('BEGIN IMMEDIATE');
+    try {
+      const result = command();
+      this.database.exec('COMMIT');
+      return result;
+    } catch (error) {
+      this.database.exec('ROLLBACK');
+      throw error;
+    }
   }
 
   private audit(actorId: string | null, action: string, targetType: string, targetId: string) {

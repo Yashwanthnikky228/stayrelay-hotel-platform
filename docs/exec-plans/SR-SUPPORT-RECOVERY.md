@@ -6,7 +6,7 @@ Add a local-only support-case workflow for synthetic Reservation Passports. A si
 
 This workflow does not accept free-form sensitive data, submit a real claim, promise a refund, contact a hotel, move money, or unlock a transfer/arrival state. Hosted use remains disabled with `STAYRELAY_TEST_AUTH` unless a durable managed identity, database, private storage, and reviewed authorization model are configured.
 
-Notification delivery is intentionally not part of this slice: there is no email, SMS, push, webhook, or in-app-message provider. The remaining work-package gap is a consent-safe notification preference/event model and a disconnected delivery adapter; no case transition may imply that a message was sent.
+The customer Case updates feed projects the latest 100 saved support audit events, filtered by authenticated case owner. It exposes only event ID, case ID, constrained event name and UTC timestamp. It sends no email, SMS, push or webhook. External notification preferences and delivery adapters remain unfinished; no case transition implies an external message was sent.
 
 ## Owned state and commands
 
@@ -25,5 +25,9 @@ Notification delivery is intentionally not part of this slice: there is no email
 4. Supplemental tracker rows are updated only after their row-specific evidence exists.
 
 ## Recovery and rollback
+
+### Continuation: persistence and failure fixtures
+
+SR-464/465/467 cover deterministic support scenarios, restart persistence and failed audit writes. Wrap support creation and transitions with their audit inserts in a SQLite transaction; inject audit failures in isolated test databases and prove both state and audit roll back. Reopen an on-disk database and verify owner isolation and stale-version denial using a second connection. No hosted schema or provider is changed. Notification delivery remains a separate unfinished slice.
 
 The feature is isolated behind `STAYRELAY_TEST_AUTH=enabled`. Disable that flag to return every account, Passport, operations, and support endpoint to a `503` safety lock. Code rollback removes the route/UI and table initialization; local synthetic databases and files contain no real customer or identity data and may be discarded through the existing test-environment cleanup process.

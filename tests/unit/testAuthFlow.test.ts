@@ -152,7 +152,10 @@ test('support cases stay owner-scoped and use protected version-checked recovery
   const resolved = await json(`/operations/support-cases/${supportCase.id}`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ status: 'resolved', expectedVersion: 2 }) });
   assert.equal(resolved.response.status, 200); supportCase = resolved.body?.case as typeof supportCase; assert.equal(supportCase.status, 'resolved'); assert.equal(supportCase.version, 3);
   assert.equal((await json(`/operations/support-cases/${supportCase.id}`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ status: 'resolved', expectedVersion: 3 }) })).response.status, 409);
-  const owned = (await json('/support-cases', { headers: { cookie: buyerCookie } })).body?.cases as { status: string; version: number }[]; assert.equal(owned[0].status, 'resolved'); assert.equal(owned[0].version, 3);
+  const projection = await json('/support-cases', { headers: { cookie: buyerCookie } });
+  const owned = projection.body?.cases as { status: string; version: number }[]; assert.equal(owned[0].status, 'resolved'); assert.equal(owned[0].version, 3);
+  assert.deepEqual((projection.body?.updates as { event: string }[]).map((update) => update.event), ['resolved', 'escalated', 'created']);
+  assert.deepEqual((await json('/support-cases', { headers: { cookie: otherCookie } })).body?.updates, []);
 });
 
 test('audit records carry actor, reason, correlation, target and timestamp without document content', () => {

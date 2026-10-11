@@ -1,4 +1,4 @@
-import type { ReservationPassport, SellerReservationDraft, SyntheticAccount, SyntheticEvidenceMetadata, SyntheticOrder, SyntheticSupportCase } from '@stayrelay/domain';
+import type { ReservationPassport, SellerReservationDraft, SyntheticAccount, SyntheticEvidenceMetadata, SyntheticOrder, SyntheticSupportCase, SyntheticSupportUpdate } from '@stayrelay/domain';
 
 export class AccountApiError extends Error {
   constructor(message: string, readonly status: number, readonly code?: string) { super(message); }
@@ -29,6 +29,6 @@ export const accountApi = {
   },
   checkout: (offerId: string) => request<{ order: SyntheticOrder; passport: ReservationPassport }>('/checkout-simulations', { method: 'POST', body: JSON.stringify({ offerId }) }),
   passports: () => request<{ passports: ReservationPassport[] }>('/passports'),
-  supportCases: () => request<{ cases: SyntheticSupportCase[] }>('/support-cases'),
+  supportCases: () => request<{ cases: SyntheticSupportCase[]; updates: SyntheticSupportUpdate[] }>('/support-cases'),
   createSupportCase: (category: SyntheticSupportCase['category'], passportId?: string) => request<{ case: SyntheticSupportCase }>('/support-cases', { method: 'POST', body: JSON.stringify({ category, passportId }) }),
 };
