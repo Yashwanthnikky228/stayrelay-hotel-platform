@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import type { DemoReviewDecision, PropertySearchFilters, SellerReservationDraft } from '@stayrelay/domain';
+import type { DemoReviewDecision, PropertySearchFilters, SellerReservationDraft, SyntheticSupportCase } from '@stayrelay/domain';
 import { sessionTtlSeconds, TestStore } from './testStore';
 
 const cookieName = 'stayrelay_test_session';
@@ -18,7 +18,7 @@ function setSession(response: Response, token: string) {
 }
 
 export function handleTestAccountRoute(request: Request, response: Response, store: TestStore, enabled: boolean): boolean {
-  if (!request.path.startsWith('/test-auth') && request.path !== '/account' && request.path !== '/properties' && request.path !== '/checkout-simulations' && request.path !== '/passports' && !request.path.startsWith('/seller-drafts') && !request.path.startsWith('/synthetic-evidence') && !request.path.startsWith('/operations/')) return false;
+  if (!request.path.startsWith('/test-auth') && request.path !== '/account' && request.path !== '/properties' && request.path !== '/checkout-simulations' && request.path !== '/passports' && request.path !== '/support-cases' && !request.path.startsWith('/seller-drafts') && !request.path.startsWith('/synthetic-evidence') && !request.path.startsWith('/operations/')) return false;
   response.setHeader('Cache-Control', 'no-store');
   if (!enabled && request.path === '/properties') return false;
   if (!enabled) { error(response, 503, 'TEST_AUTH_DISABLED', 'Local synthetic authentication is disabled.'); return true; }
@@ -60,6 +60,16 @@ export function handleTestAccountRoute(request: Request, response: Response, sto
     if (!store.isOperator(account.id)) { error(response, 403, 'OPERATOR_REQUIRED', 'Operator permission is required.'); return true; }
     if (request.path === '/operations/reviews' && request.method === 'GET') { response.json({ reviews: store.listReviewQueue() }); return true; }
     if (request.path === '/operations/passports' && request.method === 'GET') { response.json({ passports: store.listAllPassports() }); return true; }
+    if (request.path === '/operations/support-cases' && request.method === 'GET') { response.json({ cases: store.listSupportCases() }); return true; }
+    const supportTransition = request.path.match(/^\/operations\/support-cases\/([^/]+)$/);
+    if (supportTransition && request.method === 'POST') {
+      const input = body(request); const status = String(input.status); const expectedVersion = Number(input.expectedVersion);
+      if (!['escalated','resolved'].includes(status) || !Number.isInteger(expectedVersion)) { error(response, 400, 'INVALID_SUPPORT_TRANSITION', 'Use an allowed status and integer version.'); return true; }
+      const result = store.transitionSupportCase(account.id, supportTransition[1], status as 'escalated' | 'resolved', expectedVersion);
+      if (result === 'not_found') { error(response, 404, 'SUPPORT_CASE_NOT_FOUND', 'Synthetic support case not found.'); return true; }
+      if (result === 'version_conflict') { error(response, 409, 'VERSION_CONFLICT', 'Support case changed; reload before retrying.'); return true; }
+      response.json({ case: result }); return true;
+    }
     const passportTransition = request.path.match(/^\/operations\/passports\/([^/]+)\/transition$/);
     if (passportTransition && request.method === 'POST') {
       const input = body(request); const expectedVersion = Number(input.expectedVersion); const action = String(input.action ?? '');
@@ -89,6 +99,13 @@ export function handleTestAccountRoute(request: Request, response: Response, sto
     response.status(201).json(result); return true;
   }
   if (request.path === '/passports' && request.method === 'GET') { response.json({ passports: store.listPassports(account.id) }); return true; }
+  if (request.path === '/support-cases' && request.method === 'GET') { response.json({ cases: store.listSupportCases(account.id) }); return true; }
+  if (request.path === '/support-cases' && request.method === 'POST') {
+    const input = body(request); const category = String(input.category) as SyntheticSupportCase['category']; const passportId = input.passportId ? String(input.passportId) : undefined;
+    if (!['transfer_failed','arrival_help','refund_question'].includes(category)) { error(response, 400, 'INVALID_SUPPORT_CATEGORY', 'Choose a supported synthetic category.'); return true; }
+    const result = store.createSupportCase(account.id, category, passportId); if (result === 'passport_not_found') { error(response, 404, 'PASSPORT_NOT_FOUND', 'Owned Reservation Passport not found.'); return true; }
+    response.status(201).json({ case: result }); return true;
+  }
   if (request.path === '/seller-drafts' && request.method === 'GET') { response.json({ drafts: store.listDrafts(account.id) }); return true; }
   if (request.path === '/seller-drafts' && request.method === 'POST') {
     const input = body(request); const hotelName = String(input.hotelName ?? '').trim(); const city = String(input.city ?? '').trim(); const checkIn = String(input.checkIn ?? ''); const checkOut = String(input.checkOut ?? ''); const guestCount = Number(input.guestCount);

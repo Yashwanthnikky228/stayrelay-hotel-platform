@@ -185,6 +185,17 @@ export interface SyntheticOrder {
   createdAt: ISODateTime;
 }
 
+export interface SyntheticSupportCase {
+  id: EntityId;
+  ownerId: EntityId;
+  passportId?: EntityId;
+  category: 'transfer_failed' | 'arrival_help' | 'refund_question';
+  status: 'open' | 'escalated' | 'resolved';
+  version: number;
+  createdAt: ISODateTime;
+  updatedAt: ISODateTime;
+}
+
 export type PassportStatus =
   | 'under_review'
   | 'more_information_needed'

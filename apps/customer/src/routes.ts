@@ -5,5 +5,6 @@ export default [
   route('properties/:propertyId', 'pages/PropertyDetailPage.tsx'),
   route('account', 'pages/AccountPage.tsx'),
   route('passport', 'pages/PassportPage.tsx'),
+  route('support', 'pages/SupportPage.tsx'),
   route('operations', 'pages/OperationsPage.tsx'),
 ] satisfies RouteConfig;

@@ -130,6 +130,31 @@ test('operator advances Passport through version-checked synthetic transfer and 
   const buyerPassport = ((await json('/passports', { headers: { cookie: buyerCookie } })).body?.passports as { status: string; version: number }[])[0]; assert.equal(buyerPassport.status, 'checked_in'); assert.equal(buyerPassport.version, 7);
 });
 
+test('support cases stay owner-scoped and use protected version-checked recovery transitions', async () => {
+  const buyer = await json('/test-auth/session', { method: 'POST', body: JSON.stringify({ email: 'buyer-one@example.test' }) });
+  const buyerCookie = buyer.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(buyerCookie);
+  const passports = (await json('/passports', { headers: { cookie: buyerCookie } })).body?.passports as { id: string }[]; assert.ok(passports[0]);
+  assert.equal((await json('/support-cases', { method: 'POST', headers: { cookie: buyerCookie }, body: JSON.stringify({ category: 'unknown' }) })).response.status, 400);
+  const created = await json('/support-cases', { method: 'POST', headers: { cookie: buyerCookie }, body: JSON.stringify({ category: 'arrival_help', passportId: passports[0].id }) });
+  assert.equal(created.response.status, 201); let supportCase = created.body?.case as { id: string; status: string; version: number }; assert.equal(supportCase.status, 'open'); assert.equal(supportCase.version, 1);
+  assert.equal((await json('/support-cases')).response.status, 401);
+
+  const other = await json('/test-auth/session', { method: 'POST', body: JSON.stringify({ email: 'seller-two@example.test' }) }); const otherCookie = other.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(otherCookie);
+  assert.equal((await json('/support-cases', { method: 'POST', headers: { cookie: otherCookie }, body: JSON.stringify({ category: 'transfer_failed', passportId: passports[0].id }) })).response.status, 404);
+  assert.equal(((await json('/support-cases', { headers: { cookie: otherCookie } })).body?.cases as unknown[]).length, 0);
+  assert.equal((await json('/operations/support-cases', { headers: { cookie: buyerCookie } })).response.status, 403);
+
+  const operator = await json('/test-auth/operator-session', { method: 'POST', body: JSON.stringify({ email: 'operator@stayrelay.test' }) }); const operatorCookie = operator.response.headers.get('set-cookie')?.split(';')[0]; assert.ok(operatorCookie);
+  const queue = await json('/operations/support-cases', { headers: { cookie: operatorCookie } }); assert.equal((queue.body?.cases as unknown[]).length, 1);
+  const escalated = await json(`/operations/support-cases/${supportCase.id}`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ status: 'escalated', expectedVersion: 1 }) });
+  assert.equal(escalated.response.status, 200); supportCase = escalated.body?.case as typeof supportCase; assert.equal(supportCase.status, 'escalated'); assert.equal(supportCase.version, 2);
+  assert.equal((await json(`/operations/support-cases/${supportCase.id}`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ status: 'resolved', expectedVersion: 1 }) })).response.status, 409);
+  const resolved = await json(`/operations/support-cases/${supportCase.id}`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ status: 'resolved', expectedVersion: 2 }) });
+  assert.equal(resolved.response.status, 200); supportCase = resolved.body?.case as typeof supportCase; assert.equal(supportCase.status, 'resolved'); assert.equal(supportCase.version, 3);
+  assert.equal((await json(`/operations/support-cases/${supportCase.id}`, { method: 'POST', headers: { cookie: operatorCookie }, body: JSON.stringify({ status: 'resolved', expectedVersion: 3 }) })).response.status, 409);
+  const owned = (await json('/support-cases', { headers: { cookie: buyerCookie } })).body?.cases as { status: string; version: number }[]; assert.equal(owned[0].status, 'resolved'); assert.equal(owned[0].version, 3);
+});
+
 test('audit records carry actor, reason, correlation, target and timestamp without document content', () => {
   const store = new TestStore(':memory:'); const account = store.createAccount('audit@example.test', 'Demo Audit User'); assert.ok(account);
   const row = store.database.prepare('SELECT actor_id, action, reason_code, correlation_id, target_type, target_id, occurred_at FROM audit_events ORDER BY occurred_at DESC LIMIT 1').get() as Record<string, string>;

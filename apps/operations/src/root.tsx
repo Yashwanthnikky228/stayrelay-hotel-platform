@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { isRouteErrorResponse, Links, Meta, Scripts, ScrollRestoration, useRouteError } from 'react-router';
-import type { DemoReviewDecision, DemoReviewQueueItem, ReservationPassport } from '@stayrelay/domain';
+import type { DemoReviewDecision, DemoReviewQueueItem, ReservationPassport, SyntheticSupportCase } from '@stayrelay/domain';
 import '@stayrelay/ui/styles.css';
 
 export function Layout({ children }: { children: ReactNode }) {
@@ -21,6 +21,7 @@ export default function OperationsRoot() {
   const [message, setMessage] = useState('Checking protected operator access…');
   const [available, setAvailable] = useState(true);
   const [passports, setPassports] = useState<ReservationPassport[]>([]);
+  const [supportCases, setSupportCases] = useState<SyntheticSupportCase[]>([]);
 
   async function loadReviews() {
     setMessage('Checking protected operator access…');
@@ -32,6 +33,8 @@ export default function OperationsRoot() {
     const payload = await response.json() as { reviews: DemoReviewQueueItem[] }; setReviews(payload.reviews); setMessage(`${payload.reviews.length} synthetic submissions in the review queue.`);
     const passportResponse = await fetch('/api/operations/passports', { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(10_000) });
     if (passportResponse.ok) setPassports((await passportResponse.json() as { passports: ReservationPassport[] }).passports);
+    const supportResponse = await fetch('/api/operations/support-cases', { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(10_000) });
+    if (supportResponse.ok) setSupportCases((await supportResponse.json() as { cases: SyntheticSupportCase[] }).cases);
   }
   useEffect(() => { void loadReviews(); }, []);
   async function signIn() {
@@ -49,6 +52,11 @@ export default function OperationsRoot() {
     const action = actions[passport.status]; if (!action) return;
     const response = await fetch(`/api/operations/passports/${passport.id}/transition`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action, expectedVersion: passport.version }) });
     if (!response.ok) { setMessage('Passport changed or the transition was denied. Reloaded the server state.'); }
+    await loadReviews();
+  }
+  async function transitionSupport(item: SyntheticSupportCase, status: 'escalated' | 'resolved') {
+    const response = await fetch(`/api/operations/support-cases/${item.id}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ status, expectedVersion: item.version }) });
+    if (!response.ok) setMessage('Support case changed or the transition was denied. Reloaded the server state.');
     await loadReviews();
   }
   return <div className="min-h-screen bg-canvas text-ink-900">
@@ -73,6 +81,7 @@ export default function OperationsRoot() {
       </section>
       {reviews && <section className="mt-6 space-y-4" aria-label="Synthetic review queue">{reviews.length === 0 ? <p className="rounded-card border border-divider bg-surface p-6">No synthetic submissions are waiting.</p> : reviews.map((item) => <article className="rounded-card border border-divider bg-surface p-6" key={item.draft.id}><div className="flex flex-wrap justify-between gap-3"><div><h2 className="text-xl font-semibold">{item.draft.hotelName}</h2><p className="mt-1 text-sm text-ink-600">{item.draft.city} · {item.draft.checkIn} to {item.draft.checkOut}</p></div><span className={`h-fit rounded-full px-3 py-1 text-xs font-semibold ${item.published ? 'bg-brand-50 text-brand-700' : 'bg-attention-50 text-attention-800'}`}>{item.published ? 'Published demo listing' : 'Not published'}</span></div><p className="mt-4 text-sm">Evidence: {item.evidence.length ? item.evidence.map((e) => `${e.originalFilename} (${e.state.replace('_', ' ')})`).join(', ') : 'None — fail closed'}</p><div className="mt-5 grid gap-4 md:grid-cols-2">{(['eligibility','risk'] as const).map((kind) => { const value = kind === 'eligibility' ? item.eligibilityDecision : item.riskDecision; return <div className="rounded-control bg-canvas p-4" key={kind}><p className="text-sm font-semibold capitalize">{kind}: {value}</p><div className="mt-3 flex gap-2"><button className="min-h-10 rounded-control bg-brand-600 px-3 text-sm font-semibold text-white" type="button" onClick={() => void decide(item.draft.id, kind, 'approved')}>Approve</button><button className="min-h-10 rounded-control border border-divider px-3 text-sm font-semibold" type="button" onClick={() => void decide(item.draft.id, kind, 'rejected')}>Reject</button></div></div>; })}</div></article>)}</section>}
       {reviews && <section className="mt-8 space-y-4" aria-label="Reservation Passport simulations"><div><p className="text-sm font-medium text-brand-700">Synthetic lifecycle controls</p><h2 className="mt-1 text-2xl font-semibold">Reservation Passports</h2></div>{passports.length === 0 ? <p className="rounded-card border border-divider bg-surface p-6">No checkout simulation has created a Passport.</p> : passports.map((passport) => <article className="rounded-card border border-divider bg-surface p-6" key={passport.id}><p className="text-xs font-semibold uppercase tracking-wider text-attention-800">Version {passport.version} · simulated only</p><h3 className="mt-2 text-xl font-semibold capitalize">{passport.status.replaceAll('_', ' ')}</h3><p className="mt-2 text-sm text-ink-600">No live payment, reservation transfer or hotel check-in is performed.</p><button className="mt-4 min-h-11 rounded-control bg-ink-900 px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-divider disabled:text-ink-600" type="button" disabled={passport.status === 'checked_in'} onClick={() => void advance(passport)}>{passport.status === 'checked_in' ? 'Simulation complete' : 'Advance synthetic status'}</button></article>)}</section>}
+      {reviews && <section className="mt-8 space-y-4" aria-label="Synthetic support queue"><div><p className="text-sm font-medium text-brand-700">Recovery controls</p><h2 className="mt-1 text-2xl font-semibold">Support cases</h2><p className="mt-2 text-sm text-ink-600">Case state is audited. This demo does not contact hotels, issue refunds, or move money.</p></div>{supportCases.length === 0 ? <p className="rounded-card border border-divider bg-surface p-6">No synthetic support cases are waiting.</p> : supportCases.map((item) => <article className="rounded-card border border-divider bg-surface p-6" key={item.id}><div className="flex flex-wrap items-center justify-between gap-3"><h3 className="text-lg font-semibold capitalize">{item.category.replaceAll('_', ' ')}</h3><span className="rounded-full bg-canvas px-3 py-1 text-xs font-semibold capitalize">{item.status} · v{item.version}</span></div>{item.passportId && <p className="mt-3 break-all text-sm text-ink-600">Passport: {item.passportId}</p>}<div className="mt-4 flex flex-wrap gap-2"><button className="min-h-10 rounded-control border border-divider px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:text-ink-600" disabled={item.status !== 'open'} type="button" onClick={() => void transitionSupport(item, 'escalated')}>Escalate</button><button className="min-h-10 rounded-control bg-ink-900 px-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-divider" disabled={item.status === 'resolved'} type="button" onClick={() => void transitionSupport(item, 'resolved')}>Resolve</button></div></article>)}</section>}
     </main>
   </div>;
 }
