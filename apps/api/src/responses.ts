@@ -1,5 +1,5 @@
 import type { ApiErrorResponse } from '@stayrelay/domain';
-import { getHealthResponse, type HealthResponse } from './health';
+import { getHealthResponse, type HealthResponse } from './health.ts';
 
 export interface ApiReply {
   status: 200 | 404 | 405 | 503;
